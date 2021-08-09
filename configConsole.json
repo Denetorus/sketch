@@ -1,0 +1,14 @@
+{
+  "default": {
+    "controllers_path": "console",
+    "router": "router\\RouterConsole",
+    "path": "console",
+    "sign": "sign\\SignConsole"
+  },
+  "routers": [
+    {
+      "path": "console",
+      "sign": "sign\\SignConsole"
+    }
+  ]
+}
