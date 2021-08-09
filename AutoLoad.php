@@ -10,6 +10,7 @@ function AutoLoad($className): bool
     $path = str_replace('\\','/',$className);
     $dirs = [
         '',
+        '/vendor/denetorus/',
         '/vendor',
     ];
 
