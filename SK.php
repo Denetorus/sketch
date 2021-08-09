@@ -2,8 +2,6 @@
 
 namespace sketch;
 
-use router\RouterMain;
-
 class SK
 {
     private static $props = [];
@@ -98,6 +96,8 @@ class SK
         }
 
         self::checkSettings();
+
+        return true;
     }
 
     public static function add(CommandObj $obj)
@@ -139,5 +139,6 @@ class SK
         while (self::runNext()) {}
 
         self::$isRun = false;
+        return true;
     }
 }

@@ -2,7 +2,10 @@
 
 spl_autoload_register("AutoLoad");
 
-function AutoLoad($className)
+/**
+ * @throws Exception
+ */
+function AutoLoad($className): bool
 {
     $path = str_replace('\\','/',$className);
     $dirs = [
