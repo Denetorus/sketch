@@ -1,0 +1,14 @@
+{
+    "name": "denetor/sketch",
+    "description": "Sketch is the simle php framework",
+    "type": "project",
+    "license": "mit",
+    "authors": [
+        {
+            "name": "Mylnikov Denis",
+            "email": "gfc-com@mail.ru"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

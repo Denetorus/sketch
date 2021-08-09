@@ -1,0 +1,20 @@
+<?php
+
+use sketch\SK;
+
+if (!empty($_SERVER['argv'][0])){
+    if ($_SERVER['argv'][0] === 'sk') {
+        array_splice($_SERVER['argv'], 0, 1);
+    }
+    if (!empty($_SERVER['argv'][0])){
+        $_SERVER['REQUEST_URI'] = $_SERVER['argv'][0];
+        array_splice($_SERVER['argv'], 0, 1);
+    }
+}
+
+$_SERVER['REQUEST_URI'] = "/console/".$_SERVER['REQUEST_URI'];
+$_SESSION['status'] = 10;
+
+include 'skCommon.php';
+
+SK::run(ROOT . "/configConsole.json");
