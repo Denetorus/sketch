@@ -11,7 +11,7 @@ define('SKETCH_EXT', ROOT.'/vendor/sketchExt');
 
 define('OJApi', 'https://admin.1-joule.com/rest/');
 
-require_once(VENDOR.'/AutoLoad.php');
+require_once(VENDOR . '/AutoLoad.php');
 
 header('Content-type: text/html');
 header('Access-Control-Allow-Origin: *');

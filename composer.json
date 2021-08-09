@@ -1,0 +1,21 @@
+{
+    "name": "denetorus/sketch",
+    "description": "sketch framework",
+    "type": "package",
+    "require": {
+    "php": ">=5.3.0"
+},
+    "license": "mit",
+    "authors": [
+    {
+        "name": "Mylnikov Denis",
+        "email": "gfc-com@mail.ru"
+    }
+],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "denetorus\\sketch\\": "src/"
+        }
+    }
+}
