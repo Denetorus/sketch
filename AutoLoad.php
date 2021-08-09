@@ -20,7 +20,7 @@ function AutoLoad($className)
         }
     }
     if (!$found) {
-        throw new Exception('There is no class file to download_: ' . $path );
+        throw new Exception('There is no class file to download: ' . $path );
     }
     return true;
 }
