@@ -1,6 +1,6 @@
 {
     "name": "denetor/sketch",
-    "description": "Sketch is the simle php framework",
+    "description": "Sketch is the simple php framework",
     "type": "project",
     "license": "mit",
     "authors": [
@@ -9,6 +9,5 @@
             "email": "gfc-com@mail.ru"
         }
     ],
-    "minimum-stability": "dev",
     "require": {}
 }
