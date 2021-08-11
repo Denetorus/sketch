@@ -56,6 +56,8 @@ class RouterBase implements CommandInterface
 
     public function run($signParams=null)
     {
+        if (!isset($_SESSION['status'])) $_SESSION['status']=-1;
+
         $uri = $this->getUri();
 
         $AvailablePath = $this->PathAvailableWithoutSignIn($uri);
@@ -103,5 +105,7 @@ class RouterBase implements CommandInterface
                 break;
             }
         }
+        return "";
     }
+
 }
