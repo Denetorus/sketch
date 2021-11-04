@@ -180,7 +180,7 @@ class DBSQL
         $this->query($query_text, $params);
 
     }
-    public function createRecord($table)
+    public function createRecord($table): array
     {
         $columns = $this->select(
             "SELECT column_name, column_default 
