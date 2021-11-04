@@ -9,5 +9,9 @@
             "email": "gfc-com@mail.ru"
         }
     ],
-    "require": {}
+    "require": {
+        "php": "^7.2",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*"
+    }
 }

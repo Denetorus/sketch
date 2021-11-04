@@ -57,6 +57,11 @@ abstract class ObjectUIDBase
         $this->props = $this->db->deleteRecord($this->table, ['uid'=> $this->ref]);
     }
 
+    public function deleteAll()
+    {
+        $this->props = $this->db->deleteAllRecords($this->table);
+    }
+
     public function clear()
     {
         $this->createNew();

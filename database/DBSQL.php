@@ -206,6 +206,9 @@ class DBSQL
         $this->query($query_text, $conditions);
 
     }
+    public function deleteAllRecords($table){
+        $this->query("DELETE FROM {$table}");
+    }
 
     protected function prepareQueryConditionsText($conditions, $separator=" && "){
 

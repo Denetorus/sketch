@@ -63,6 +63,11 @@ abstract class ObjectBase
         $this->props = $this->db->deleteRecord($this->table, $this->ref);
     }
 
+    public function deleteAll()
+    {
+        $this->props = $this->db->deleteAllRecords($this->table);
+    }
+
     public function clear()
     {
         $this->createNew();
