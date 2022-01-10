@@ -169,12 +169,16 @@ class DBSQL
         }
 
         $query_text = "UPDATE {$table} SET ".
-                        $this->prepareQueryConditionsText($params, ",").
+                        $this->prepareQueryConditionsText($params, ",", "_S_").
                       " WHERE ".
-                        $this->prepareQueryConditionsText($conditions);
+                        $this->prepareQueryConditionsText($conditions," && ","_W_");
 
+        $sendParams = [];
+        foreach ($params as $key=>$value){
+            $sendParams["_S_".$key] = $value;
+        }
         foreach ($conditions as $key=>$value){
-            $params[$key] = $value;
+            $sendParams["_W_".$key] = $value;
         }
 
         $this->query($query_text, $params);
@@ -210,7 +214,7 @@ class DBSQL
         $this->query("DELETE FROM {$table}");
     }
 
-    protected function prepareQueryConditionsText($conditions, $separator=" && "){
+    protected function prepareQueryConditionsText($conditions, $separator=" && ", $param_prefix=""){
 
         $query_text = "" ;
 
@@ -218,7 +222,7 @@ class DBSQL
         if ( $countConditions !== 0 ) {
             foreach ($conditions as $key=>$value){
                 $countConditions -= 1;
-                $query_text .= $key."=:".$key;
+                $query_text .= $key."=:".$param_prefix.$key;
                 if ($countConditions !== 0){
                     $query_text .= $separator;
                 }
