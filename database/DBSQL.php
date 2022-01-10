@@ -181,7 +181,7 @@ class DBSQL
             $sendParams["_W_".$key] = $value;
         }
 
-        $this->query($query_text, $params);
+        $this->query($query_text, $sendParams);
 
     }
     public function createRecord($table): array
