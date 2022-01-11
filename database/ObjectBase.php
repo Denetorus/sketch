@@ -14,7 +14,7 @@ abstract class ObjectBase
     {
         if ($id === null) {
             $this->createNew();
-        } else {
+        } else if ($id !== false) {
             $this->ref = +$id;
             $this->load();
         }
