@@ -14,7 +14,7 @@ abstract class ControllerBase
             $view = new ViewBase();
             return $view->render($fileName, $params);
         } else {
-            return "This site made with use SKETCH framework ";
+            return "This site is made using SKETCH framework ";
         }
     }
 }
