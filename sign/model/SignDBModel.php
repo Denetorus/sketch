@@ -20,11 +20,6 @@ class SignDBModel implements SignModelInterface
     {
         if (isset($_POST['login']) && isset($_POST['password'])) {
             if ($this->SignInByLoginPassword($_POST['login'], $_POST['password'], false)) {
-                $user_activity = new user_activities();
-                $user_activity->props['login']=$_POST['login'];
-                $user_activity->props['app']=2;
-                $user_activity->props['created_at']=Time();
-                $user_activity->save();
                 return;
             }
         }
