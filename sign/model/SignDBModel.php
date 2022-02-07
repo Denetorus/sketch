@@ -2,7 +2,6 @@
 
 namespace sketch\sign\model;
 
-use database\DBMain\object\user_activities;
 use sketch\sign\SignModelInterface;
 
 class SignDBModel implements SignModelInterface
