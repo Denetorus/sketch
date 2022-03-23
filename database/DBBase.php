@@ -2,23 +2,21 @@
 
 namespace sketch\database;
 
+use sketch\SK;
+
 abstract class DBBase
 {
     public static function getInstance()
     {
         if (static::$DB === null) {
             static::$DB = new DBSQL();
-            static::$DB->connect(static::GetAttributes());
+            static::$DB->connect(static::getAttributes());
         }
         return static::$DB;
     }
 
     public static function getAttributes()
     {
-        return [
-            'dsn' => '',
-            'user' => '',
-            'password' => ''
-        ];
+        return SK::getProps()['db_params'];
     }
 }
