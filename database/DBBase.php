@@ -6,7 +6,10 @@ use sketch\SK;
 
 abstract class DBBase
 {
-    public static function getInstance()
+
+    protected static DBSQL $DB;
+
+    public static function getInstance():DBSQL
     {
         if (static::$DB === null) {
             static::$DB = new DBSQL();
