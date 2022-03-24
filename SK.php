@@ -31,6 +31,10 @@ class SK
     {
         return self::$props;
     }
+    public static function getProp($key)
+    {
+        return self::$props[$key];
+    }
 
     private static function setSettingsDefault($settings){
         foreach ($settings as $key => $value) {
