@@ -7,7 +7,7 @@ use sketch\SK;
 abstract class DBBase
 {
 
-    protected static ?DBSQL $DB = null;
+    protected static $DB = null;
 
     public static function getInstance():DBSQL
     {
