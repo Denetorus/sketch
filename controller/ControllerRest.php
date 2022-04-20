@@ -3,65 +3,73 @@
 namespace sketch\controller;
 
 
+use sketch\rest\RequestResult;
 use sketch\view\ViewBase;
 
 abstract class ControllerRest
 {
 
-    public function allowMethods(){
+    public function allowMethods(): string
+    {
         return "";
     }
 
     public function setHeaderAllowMethods(){
         header("Allow", $this->allowMethods());
-        return "";
     }
 
     public function actionGet()
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
-        return "Method GET Not Allowed";
+        $result = new RequestResult();
+        $result->addError(3, "GET", "Method GET Not Allowed");
+        return $result;
     }
 
     public function actionPost()
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
-        return "Method POST Not Allowed";
+        $result = new RequestResult();
+        $result->addError(3, "POST", "Method POST Not Allowed");
+        return $result;
     }
 
     public function actionPut()
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
-        return "Method PUT Not Allowed";
+        $result = new RequestResult();
+        $result->addError(3, "PUT", "Method PUT Not Allowed");
+        return $result;
     }
 
     public function actionDelete()
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
-        return "Method DELETE Not Allowed";
+        $result = new RequestResult();
+        $result->addError(3, "DELETE", "Method DELETE Not Allowed");
+        return $result;
     }
 
     public function actionView()
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
-        return "VIEW Method Not Allowed";
+        $result = new RequestResult();
+        $result->addError(3, "VIEW", "Method VIEW Not Allowed");
+        return $result;
     }
 
     public function actionCopy()
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
-        return "COPY Method Not Allowed";
-    }
-
-    public function getList(){
-        http_response_code(406);
-        return "Method GET without parameters for this resource is not available";
+        $result = new RequestResult();
+        $result->addError(3, "COPY", "Method COPY Not Allowed");
+        return $result;
     }
 
     public function render($fileName, $params = [])
@@ -72,7 +80,7 @@ abstract class ControllerRest
             $view = new ViewBase();
             return $view->render($fileName, $params);
         } else {
-            return "This site made with use SKETCH framework ";
+            return "This site made with use SKETCH framework";
         }
     }
 

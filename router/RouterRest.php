@@ -3,7 +3,6 @@
 namespace sketch\router;
 
 use sketch\SK;
-use sketch\router\RouterBase;
 
 
 class RouterRest extends RouterBase
