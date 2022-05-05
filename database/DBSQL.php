@@ -64,13 +64,19 @@ class DBSQL
 
     public function getTablesBySchema($schema_name='public'): array
     {
-        return $this->select(
+        $result = [];
+        $queryResult = $this->select(
             "SELECT tablename as table_name 
                     FROM pg_catalog.pg_tables 
                     where schemaname=:schema_name;",
             ["schema_name"=>$schema_name]
         );
 
+        foreach ($queryResult as $item) {
+            $result[] = $item["table_name"];
+        }
+
+        return $result;
     }
 
     public function getColumnsBySchema($schema_name='public'): array
