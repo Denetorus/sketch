@@ -2,9 +2,7 @@
 
 namespace sketch\controller;
 
-
 use sketch\rest\RequestResult;
-use sketch\view\ViewBase;
 
 abstract class ControllerRest
 {
@@ -70,18 +68,6 @@ abstract class ControllerRest
         $result = new RequestResult();
         $result->addError(3, "COPY", "Method COPY Not Allowed");
         return $result;
-    }
-
-    public function render($fileName, $params = [])
-    {
-        $fileName = VIEW.'/'.$fileName;
-
-        if (is_file($fileName)){
-            $view = new ViewBase();
-            return $view->render($fileName, $params);
-        } else {
-            return "This site made with use SKETCH framework";
-        }
     }
 
 

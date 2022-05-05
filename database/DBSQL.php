@@ -36,13 +36,15 @@ class DBSQL
             ]
         );
     }
+    
     public function query($query, $params = array())
     {
         $res = $this->db->prepare($query);
         $res->execute($params);
         return $res;
     }
-    public function select($query, $params = array())
+    
+    public function select($query, $params = array()): ?array
     {
         $result = $this->query($query, $params);
         if ($result) {
@@ -50,13 +52,63 @@ class DBSQL
         }
         return null;
     }
-    public function selectOne($query, $params = array())
+    
+    public function selectOne($query, $params = array()): ?array
     {
         $result = $this->query($query, $params);
         if ($result) {
             return $result->fetch();
         }
         return null;
+    }
+
+    public function getTablesBySchema($schema_name='public'): array
+    {
+        return $this->select(
+            "SELECT tablename as table_name 
+                    FROM pg_catalog.pg_tables 
+                    where schemaname=:schema_name;",
+            ["schema_name"=>$schema_name]
+        );
+
+    }
+
+    public function getColumnsBySchema($schema_name='public'): array
+    {
+        return $this->select(
+            "SELECT * 
+                    FROM information_schema.columns 
+                    where table_schema=:schema_name;",
+            ["schema_name"=>$schema_name]
+        );
+    }
+
+    public function getTableColumnsBySchema($table_name, $schema_name='public'): array
+    {
+        return $this->select(
+            "SELECT * 
+                    FROM information_schema.columns 
+                    where table_schema=:schema_name and table_name=:table_name;",
+            [
+                "table_name" => $table_name,
+                "schema_name" => $schema_name
+            ]
+        );
+    }
+
+    public function getPrimaryKeysBySchema($schema_name): array
+    {
+        return $this->select(
+            "SELECT c.column_name, c.data_type
+                    FROM information_schema.table_constraints tc 
+                        JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name) 
+                        JOIN information_schema.columns AS c ON 
+                            c.table_schema = tc.constraint_schema
+                                AND tc.table_name = c.table_name
+                                AND ccu.column_name = c.column_name
+                    WHERE constraint_type = 'PRIMARY KEY' and constraint_schema =:schema_name;",
+            ["schema_name"=>$schema_name]
+        );
     }
 
     public function createTable($table, $params=null, $options=null)
@@ -85,11 +137,11 @@ class DBSQL
 
     }
 
-
     public function dropTable($table)
     {
         $this->query("DROP  TABLE {$table}");
     }
+    
     public function tableIsExist($table)
     {
         $result = $this->select(
@@ -110,6 +162,7 @@ class DBSQL
         $result = $this->select($query_text, $conditions);
         return Count($result) !== 0;
     }
+    
     public function getRecords($table, $conditions)
     {
         if (!is_array($conditions)){
@@ -121,10 +174,12 @@ class DBSQL
         return $this->select($query_text, $conditions);
 
     }
+    
     public function getList($table)
     {
         return $this->select("SELECT * FROM {$table}");
     }
+    
     public function getRecord($table, $conditions)
     {
         if (!is_array($conditions)){
@@ -138,6 +193,7 @@ class DBSQL
         }
         return null;
     }
+    
     public function setRecord($table, $params, $withNewID=true)
     {
 
@@ -160,8 +216,8 @@ class DBSQL
             $params
         );
 
-
     }
+    
     public function updateRecord($table, $conditions, $params)
     {
         if (!is_array($conditions)){
@@ -184,6 +240,7 @@ class DBSQL
         $this->query($query_text, $sendParams);
 
     }
+    
     public function createRecord($table): array
     {
         $columns = $this->select(
@@ -198,6 +255,7 @@ class DBSQL
         }
         return $items;
     }
+    
     public function deleteRecord($table, $conditions)
     {
 
@@ -210,6 +268,7 @@ class DBSQL
         $this->query($query_text, $conditions);
 
     }
+    
     public function deleteAllRecords($table){
         $this->query("DELETE FROM {$table}");
     }
