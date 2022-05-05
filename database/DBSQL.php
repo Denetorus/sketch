@@ -109,7 +109,7 @@ class DBSQL
         );
     }
 
-    public function getPrimaryKeysBySchema($schema_name): array
+    public function getPrimaryKeysBySchema($schema_name='public'): array
     {
         return $this->select(
             "SELECT c.table_name, c.column_name
