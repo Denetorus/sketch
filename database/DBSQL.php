@@ -81,10 +81,17 @@ class DBSQL
 
     public function getColumnsBySchema($schema_name='public'): array
     {
-        return $this->select(
-            "SELECT * 
-                    FROM information_schema.columns 
-                    where table_schema=:schema_name;",
+        return $this->select("
+            SELECT 
+                   table_name as table_name, 
+                   column_name as column_name, 
+                   column_default as column_default, 
+                   is_nullable='NO' as column_not_null,
+                   data_type as column_data_type,
+                   character_maximum_length as column_max_length
+            FROM information_schema.columns
+            WHERE table_schema=:schema_name;
+            ",
             ["schema_name"=>$schema_name]
         );
     }
@@ -105,7 +112,7 @@ class DBSQL
     public function getPrimaryKeysBySchema($schema_name): array
     {
         return $this->select(
-            "SELECT c.column_name, c.data_type
+            "SELECT c.table_name, c.column_name
                     FROM information_schema.table_constraints tc 
                         JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name) 
                         JOIN information_schema.columns AS c ON 
