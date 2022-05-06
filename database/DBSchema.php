@@ -96,14 +96,14 @@ class DBSchema
         $toChange = $this->getDifferentTables($not_changing_tables);
 
         $tables = [];
-        if (count($toDelete)===0)
+        if (count($toDelete)>0)
             $tables["toDelete"] = $toDelete;
-        if (count($toAdd)===0)
+        if (count($toAdd)>0)
             $tables["toAdd"] = $toAdd;
-        if (count($toChange)===0)
+        if (count($toChange)>0)
             $tables["toChange"] = $toChange;
 
-        if (count($tables)===0)
+        if (count($tables)>0)
             $this->dif_schema["tables"] = $tables;
 
     }
