@@ -25,7 +25,7 @@ class DBMigrate
         $obj->up();
 
         $this->db->setRecord(
-            $this->schema_name.".migration",
+            $this->schema_name.".version",
             ["version"=>$class_name]
         );
 
