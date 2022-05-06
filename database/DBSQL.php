@@ -68,6 +68,11 @@ class DBSQL
 
     /* SCHEMAS */
 
+    public function createSchema($schema_name):void
+    {
+        $this->query("CREATE SCHEMA IF NOT EXISTS $schema_name;");
+    }
+
     public function getSchemasNames(): array
     {
         $result = [];

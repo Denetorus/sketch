@@ -100,6 +100,7 @@ class DBMigrate
 
     private function createVersionTable(): void
     {
+        $this->db->createSchema($this->schema_name);
         $this->db->createTable(
             "version",
             [
