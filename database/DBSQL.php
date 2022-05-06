@@ -17,6 +17,8 @@ class DBSQL
         }
     }
 
+    /* COMMON */
+
     public function connect($attr = null)
     {
         if ($attr !== null){
@@ -123,7 +125,7 @@ class DBSQL
             $paramsText = substr($paramsText, 0, -1);
         }
 
-        $queryText = "CREATE TABLE {$schema_name}.{$table_name} ({$paramsText})";
+        $queryText = "CREATE TABLE $schema_name.$table_name ($paramsText)";
 
         $this->query($queryText);
 
@@ -131,7 +133,7 @@ class DBSQL
 
     public function dropTable($table_name, $schema_name='public')
     {
-        $this->query("DROP  TABLE {$schema_name}.{$table_name}");
+        $this->query("DROP  TABLE $schema_name.$table_name");
     }
 
     public function getTablesBySchema($schema_name='public'): array
@@ -171,19 +173,19 @@ class DBSQL
     public function addColumn($table_name, $column_name, $column_content, $schema_name='public')
     {
         $this->query(
-            "ALTER TABLE {$schema_name}.{$table_name} ADD COLUMN {$column_name} {$column_content};"
+            "ALTER TABLE $schema_name.$table_name ADD COLUMN $column_name $column_content;"
         );
     }
 
     public function dropColumn($table_name, $column_name, $schema_name='public')
     {
-        $this->query("ALTER TABLE {$schema_name}.{$table_name} DROP COLUMN IF EXISTS {$column_name}");
+        $this->query("ALTER TABLE $schema_name.$table_name DROP COLUMN IF EXISTS $column_name");
     }
 
     public function changeColumn($table_name, $column_name, $column_content, $schema_name='public')
     {
         $this->query(
-            "ALTER TABLE {$schema_name}.{$table_name} ALTER COLUMN {$column_name} {$column_content};"
+            "ALTER TABLE $schema_name.$table_name ALTER COLUMN $column_name $column_content;"
         );
     }
 
@@ -222,39 +224,39 @@ class DBSQL
 
     /* RECORDS */
 
-    public function recordIsExist($table, $conditions)
+    public function recordIsExist($table, $conditions): bool
     {
         if (!is_array($conditions)){
             $conditions = ["id" => $conditions];
         }
-        $query_text = "SELECT * FROM {$table} WHERE ".$this->prepareQueryConditionsText($conditions);
+        $query_text = "SELECT * FROM $table WHERE {$this->prepareQueryConditionsText($conditions)}";
         $result = $this->select($query_text, $conditions);
         return Count($result) !== 0;
     }
     
-    public function getRecords($table, $conditions)
+    public function getRecords($table, $conditions): ?array
     {
         if (!is_array($conditions)){
             $conditions = ["id" => $conditions];
         }
 
-        $query_text = "SELECT * FROM {$table} WHERE ".$this->prepareQueryConditionsText($conditions);
+        $query_text = "SELECT * FROM $table WHERE {$this->prepareQueryConditionsText($conditions)};";
 
         return $this->select($query_text, $conditions);
 
     }
     
-    public function getList($table)
+    public function getList($table,$schema_name='public'): ?array
     {
-        return $this->select("SELECT * FROM {$table}");
+        return $this->select("SELECT * FROM $schema_name.$table");
     }
     
-    public function getRecord($table, $conditions)
+    public function getRecord($table, $conditions): ?array
     {
         if (!is_array($conditions)){
             $conditions = ["id" => $conditions];
         }
-        $query_text = "SELECT * FROM {$table} WHERE ".$this->prepareQueryConditionsText($conditions);
+        $query_text = "SELECT * FROM $table WHERE {$this->prepareQueryConditionsText($conditions)}";
 
         $result = $this->selectOne($query_text, $conditions);
         if ($result) {
@@ -263,7 +265,7 @@ class DBSQL
         return null;
     }
     
-    public function setRecord($table, $params, $withNewID=true)
+    public function setRecord($table, $params, $withNewID=true): void
     {
 
         $symbol = "";
@@ -281,7 +283,7 @@ class DBSQL
 
 
         $this->query(
-            "INSERT INTO {$table} ({$paramsName}) VALUES ({$valueName})",
+            "INSERT INTO $table ($paramsName) VALUES ($valueName)",
             $params
         );
 
@@ -293,10 +295,10 @@ class DBSQL
             $conditions = ["id" => $conditions];
         }
 
-        $query_text = "UPDATE {$table} SET ".
-                        $this->prepareQueryConditionsText($params, ",", "_S_").
-                      " WHERE ".
-                        $this->prepareQueryConditionsText($conditions," && ","_W_");
+        $query_text = "UPDATE $table SET 
+                        {$this->prepareQueryConditionsText($params, ",", "_S_")}
+                       WHERE 
+                        {$this->prepareQueryConditionsText($conditions," && ","_W_")}";
 
         $sendParams = [];
         foreach ($params as $key=>$value){
@@ -310,12 +312,12 @@ class DBSQL
 
     }
     
-    public function createRecord($table): array
+    public function createRecord($table_name): array
     {
         $columns = $this->select(
             "SELECT column_name, column_default 
                   FROM information_schema.columns 
-                  WHERE table_schema='public' and table_name='{$table}'"
+                  WHERE table_schema='public' and table_name='$table_name'"
         );
 
         $items = [];
@@ -325,26 +327,28 @@ class DBSQL
         return $items;
     }
     
-    public function deleteRecord($table, $conditions)
+    public function deleteRecord($table, $conditions, $schema_name='public')
     {
 
         if (!is_array($conditions)){
             $conditions = ["id" => $conditions];
         }
 
-        $query_text = "DELETE FROM {$table} WHERE ".$this->prepareQueryConditionsText($conditions);
+        $query_text = "DELETE FROM $schema_name.$table WHERE {$this->prepareQueryConditionsText($conditions)};";
 
         $this->query($query_text, $conditions);
 
     }
     
-    public function deleteAllRecords($table){
-        $this->query("DELETE FROM {$table}");
+    public function deleteAllRecords($table, $schema_name='public'):void
+    {
+        $this->query("DELETE FROM $schema_name.$table;");
     }
 
 
 
-    protected function prepareQueryConditionsText($conditions, $separator=" && ", $param_prefix=""){
+    protected function prepareQueryConditionsText($conditions, $separator=" && ", $param_prefix=""): string
+    {
 
         $query_text = "" ;
 
@@ -361,39 +365,6 @@ class DBSQL
 
         return $query_text;
 
-    }
-
-    public function createUUID($trim = true){
-        // Windows
-        if (function_exists('com_create_guid') === true) {
-            if ($trim === true)
-                return trim(com_create_guid(), '{}');
-            else
-                return com_create_guid();
-        }
-
-        // OSX/Linux
-        if (function_exists('openssl_random_pseudo_bytes') === true) {
-            $data = openssl_random_pseudo_bytes(16);
-            $data[6] = chr(ord($data[6]) & 0x0f | 0x40);    // set version to 0100
-            $data[8] = chr(ord($data[8]) & 0x3f | 0x80);    // set bits 6-7 to 10
-            return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-        }
-
-        // Fallback (PHP 4.2+)
-        mt_srand((double)microtime() * 10000);
-        $charid = strtolower(md5(uniqid(rand(), true)));
-        $hyphen = chr(45);                  // "-"
-        $lbrace = $trim ? "" : chr(123);    // "{"
-        $rbrace = $trim ? "" : chr(125);    // "}"
-        $guidv4 = $lbrace.
-            substr($charid,  0,  8).$hyphen.
-            substr($charid,  8,  4).$hyphen.
-            substr($charid, 12,  4).$hyphen.
-            substr($charid, 16,  4).$hyphen.
-            substr($charid, 20, 12).
-            $rbrace;
-        return $guidv4;
     }
 
 }
