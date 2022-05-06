@@ -138,7 +138,7 @@ class ".$class_name." extends \sketch\database\ObjectMigration
     public function up()
     {
         \$this->migrateBySchema(json_decode('
-            ".json_encode($this->dif_schema)."
+            ".json_encode($this->dif_schema, JSON_PRETTY_PRINT)."
         ',true));
     }
 }
