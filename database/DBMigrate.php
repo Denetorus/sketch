@@ -5,11 +5,11 @@ namespace sketch\database;
 class DBMigrate
 {
     private $db;
-    private $schema_name = 'migrate';
-    private $directory = "";
-    private $namespace = "";
+    private $schema_name;
+    private $directory;
+    private $namespace;
 
-    public function __construct($db, $directory, $namespace, $schema_name='migrate')
+    public function __construct(DBSQL $db, string $directory, string $namespace, string $schema_name='migrate')
     {
         $this->db = $db;
         $this->directory = $directory;
@@ -101,11 +101,13 @@ class DBMigrate
     private function createVersionTable(): void
     {
         $this->db->createTable(
-            "$this->schema_name.version",
+            "version",
             [
                 'version' => 'character varying(180) NOT NULL PRIMARY KEY',
                 'apply_time' => 'timestamp DEFAULT CURRENT_TIMESTAMP',
-            ]
+            ],
+            null,
+            $this->schema_name
         );
     }
 
