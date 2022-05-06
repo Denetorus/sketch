@@ -124,7 +124,7 @@ class DBSchema
     {
 
         if (count($this->dif_schema)===0){
-            echo "Migrate file did not created => no difference";
+            echo "Migrate file did not created => no difference\n";
             return;
         }
 
