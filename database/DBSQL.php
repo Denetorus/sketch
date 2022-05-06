@@ -87,6 +87,7 @@ class DBSQL
         return $result;
     }
 
+
     /* TABLES */
 
     public function tableIsExist($table_name,$schema_name='public'): bool
@@ -168,6 +169,7 @@ class DBSQL
         );
     }
 
+
     /* COLUMNS */
 
     public function addColumn($table_name, $column_name, $column_content, $schema_name='public')
@@ -218,8 +220,6 @@ class DBSQL
             ]
         );
     }
-
-
 
 
     /* RECORDS */

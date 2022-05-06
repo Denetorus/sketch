@@ -6,7 +6,7 @@ class DBSchema
 {
 
     private $db;
-    private $schema_name = "";
+    private $schema_name;
     private $next_schema = [];
     private $prev_schema = [];
     private $dif_schema = [];
@@ -299,8 +299,8 @@ class ".$class_name." extends sketch\database\ObjectMigration
     {
         foreach ($columns as $column_name=>$column) {
             $this->db->dropColumn($table_name, $column_name, $this->schema_name);
-            echo "{$this->schema_name} => {$table_name} 
-                    => column {$column_name} was deleted\n";
+            echo "$this->schema_name => $table_name 
+                    => column $column_name was deleted\n";
         }
     }
 
@@ -314,8 +314,8 @@ class ".$class_name." extends sketch\database\ObjectMigration
                 $column_content,
                 $this->schema_name
             );
-            echo "{$this->schema_name} => {$table_name} 
-                        => column {$column_name} was added\n";
+            echo "$this->schema_name => $table_name 
+                        => column $column_name was added\n";
         }
     }
 
@@ -331,11 +331,11 @@ class ".$class_name." extends sketch\database\ObjectMigration
                 $this->db->changeColumn(
                     $table_name,
                     $column_name,
-                    "TYPE {$NewType}",
+                    "TYPE $NewType",
                     $this->schema_name
                 );
-                echo "{$this->schema_name} => {$table_name} 
-                            => column {$column_name} TYPE {$NewType}\n";
+                echo "$this->schema_name => $table_name 
+                            => column $column_name TYPE $NewType\n";
             }
 
             if(!isset($column["old"]["not_null"]))
@@ -350,8 +350,8 @@ class ".$class_name." extends sketch\database\ObjectMigration
                         "SET NOT NULL",
                         $this->schema_name
                     );
-                    echo "{$this->schema_name} => {$table_name} 
-                            => column {$column_name} SET NOT NULL\n";
+                    echo "$this->schema_name => $table_name 
+                            => column $column_name SET NOT NULL\n";
                 }else{
                     $this->db->changeColumn(
                         $table_name,
@@ -359,8 +359,8 @@ class ".$class_name." extends sketch\database\ObjectMigration
                         "DROP NOT NULL",
                         $this->schema_name
                     );
-                    echo "{$this->schema_name} => {$table_name} 
-                            => column {$column_name} DROP NOT NULL\n";
+                    echo "$this->schema_name => $table_name 
+                            => column $column_name DROP NOT NULL\n";
                 }
             }
 
@@ -374,8 +374,8 @@ class ".$class_name." extends sketch\database\ObjectMigration
                         "DROP DEFAULT",
                         $this->schema_name
                     );
-                    echo "{$this->schema_name} => {$table_name} 
-                                => column {$column_name} DROP DEFAULT\n";
+                    echo "$this->schema_name => $table_name 
+                                => column $column_name DROP DEFAULT\n";
                 }else{
                     $this->db->changeColumn(
                         $table_name,
@@ -383,14 +383,14 @@ class ".$class_name." extends sketch\database\ObjectMigration
                         "SET DEFAULT {$column["new"]["default"]}",
                         $this->schema_name
                     );
-                    echo "{$this->schema_name} => {$table_name} 
-                            => column {$column_name}
+                    echo "$this->schema_name => $table_name}
+                            => column $column_name
                             SET DEFAULT {$column["new"]["default"]}\n";
                 }
             }
 
-            echo "{$this->schema_name} => {$table_name} 
-                    => column {$column_name} was changed\n";
+            echo "$this->schema_name => $table_name 
+                    => column $column_name was changed\n";
         }
 
     }
