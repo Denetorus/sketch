@@ -133,7 +133,7 @@ class DBSchema
 
         $content = "<?php
 ".$file_header."
-class ".$class_name." extends sketch\database\ObjectMigration
+class ".$class_name." extends \sketch\database\ObjectMigration
 {
     public function up()
     {
