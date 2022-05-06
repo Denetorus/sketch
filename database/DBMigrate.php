@@ -19,9 +19,9 @@ class DBMigrate
 
     public function UpOne($class_name): void
     {
-        $full_class_name = $this->namespace."\\".$class_name($this->db);
+        $full_class_name = $this->namespace."\\".$class_name;
 
-        $obj = new $full_class_name;
+        $obj = new $full_class_name($this->db);
         $obj->up();
 
         $this->db->setRecord(
