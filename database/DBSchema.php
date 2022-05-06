@@ -88,7 +88,12 @@ class DBSchema
 
         $toDelete = $this->getExcessTablesNames();
         $toAdd = $this->getMissingTables();
-        $toChange = $this->getDifferentTables($toAdd);
+
+        $not_changing_tables = [];
+        foreach ($toAdd as $key=>$value) {
+            $not_changing_tables[] = $key;
+        }
+        $toChange = $this->getDifferentTables($not_changing_tables);
 
         $tables = [];
         if (count($toDelete)===0)
