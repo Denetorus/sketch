@@ -111,11 +111,11 @@ class DBSchema
     public function migrateByDifference(): void
     {
         $tables = &$this->dif_schema["tables"];
-        if ( count($tables["toDelete"])>0 )
+        if ( isset($tables["toDelete"]) )
             $this->deleteTables($tables["toDelete"]);
-        if ( count($tables["toAdd"])>0 )
+        if ( isset($tables["toAdd"]) )
             $this->addTables($tables["toAdd"]);
-        if ( count($tables["toChange"])>0 )
+        if ( isset($tables["toChange"]) )
             $this->alignmentTables($tables["toChange"]);
     }
 
