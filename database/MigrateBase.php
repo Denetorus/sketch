@@ -4,11 +4,18 @@ namespace sketch\database;
 
 use sketch\CommandInterface;
 
-abstract class MigrateBase implements CommandInterface
+class MigrateBase implements CommandInterface
 {
     public $db;
+
+
     public function up(){}
     public function down(){}
+
+    public function __construct($db)
+    {
+        $this->db = $db;
+    }
 
     private function checkMigrationTable()
     {
@@ -47,7 +54,7 @@ abstract class MigrateBase implements CommandInterface
         foreach (glob($path) as $File) {
             $className = basename($File, ".php");
             if (! $this->db->recordIsExist('migration', ["version" => $className])){
-                $List[] = $MigrationsNameSpase.'\\'.basename($File, ".php");
+                $List[] = $MigrationsNameSpase.'\\'.$className;
             };
         }
         return $List;

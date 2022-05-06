@@ -4,6 +4,7 @@ namespace sketch\database;
 
 class DBSQL
 {
+
     protected $db;
     protected $dsn;
     protected $user;
@@ -62,6 +63,77 @@ class DBSQL
         return null;
     }
 
+
+    /* SCHEMAS */
+
+    public function getSchemasNames(): array
+    {
+        $result = [];
+
+        $schemas =  $this->query("
+            SELECT table_schema 
+            FROM information_schema.tables
+            WHERE table_schema NOT IN ('information_schema', 'pg_catalog') 
+                AND table_type = 'BASE TABLE'
+            GROUP BY
+	            table_schema");
+
+        foreach ($schemas as $schema) {
+            $result[] = $schema["table_schema"];
+        }
+
+        return $result;
+    }
+
+    /* TABLES */
+
+    public function tableIsExist($table_name,$schema_name='public'): bool
+    {
+        $result = $this->select(
+            "SELECT table_name 
+                  FROM information_schema.tables  
+                  where table_schema=:schema_name and table_name=:table_name",
+            [
+                "schema_name"=>$schema_name,
+                "table_name"=>$table_name
+            ]
+        );
+
+        return Count($result) === 1;
+    }
+
+
+    public function createTable($table_name, $params=null, $options=null, $schema_name='public'):void
+    {
+
+        $paramsText = '';
+        if ($params !== null){
+            foreach ($params as $key=>$val){
+                $paramsText .= $key.' '.$val.',';
+            }
+        }
+
+        if ($options !== null){
+            foreach ($options as $val){
+                $paramsText .= $val.',';
+            }
+        }
+
+        if (strlen($paramsText)>0){
+            $paramsText = substr($paramsText, 0, -1);
+        }
+
+        $queryText = "CREATE TABLE {$schema_name}.{$table_name} ({$paramsText})";
+
+        $this->query($queryText);
+
+    }
+
+    public function dropTable($table_name, $schema_name='public')
+    {
+        $this->query("DROP  TABLE {$schema_name}.{$table_name}");
+    }
+
     public function getTablesBySchema($schema_name='public'): array
     {
         $result = [];
@@ -77,6 +149,42 @@ class DBSQL
         }
 
         return $result;
+    }
+
+    public function getPrimaryKeysBySchema($schema_name='public'): array
+    {
+        return $this->select(
+            "SELECT c.table_name, c.column_name
+                    FROM information_schema.table_constraints tc 
+                        JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name) 
+                        JOIN information_schema.columns AS c ON 
+                            c.table_schema = tc.constraint_schema
+                                AND tc.table_name = c.table_name
+                                AND ccu.column_name = c.column_name
+                    WHERE constraint_type = 'PRIMARY KEY' and constraint_schema =:schema_name;",
+            ["schema_name"=>$schema_name]
+        );
+    }
+
+    /* COLUMNS */
+
+    public function addColumn($table_name, $column_name, $column_content, $schema_name='public')
+    {
+        $this->query(
+            "ALTER TABLE {$schema_name}.{$table_name} ADD COLUMN {$column_name} {$column_content};"
+        );
+    }
+
+    public function dropColumn($table_name, $column_name, $schema_name='public')
+    {
+        $this->query("ALTER TABLE {$schema_name}.{$table_name} DROP COLUMN IF EXISTS {$column_name}");
+    }
+
+    public function changeColumn($table_name, $column_name, $column_content, $schema_name='public')
+    {
+        $this->query(
+            "ALTER TABLE {$schema_name}.{$table_name} ALTER COLUMN {$column_name} {$column_content};"
+        );
     }
 
     public function getColumnsBySchema($schema_name='public'): array
@@ -109,62 +217,10 @@ class DBSQL
         );
     }
 
-    public function getPrimaryKeysBySchema($schema_name='public'): array
-    {
-        return $this->select(
-            "SELECT c.table_name, c.column_name
-                    FROM information_schema.table_constraints tc 
-                        JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name) 
-                        JOIN information_schema.columns AS c ON 
-                            c.table_schema = tc.constraint_schema
-                                AND tc.table_name = c.table_name
-                                AND ccu.column_name = c.column_name
-                    WHERE constraint_type = 'PRIMARY KEY' and constraint_schema =:schema_name;",
-            ["schema_name"=>$schema_name]
-        );
-    }
 
-    public function createTable($table, $params=null, $options=null)
-    {
 
-        $paramsText = '';
-        if ($params !== null){
-            foreach ($params as $key=>$val){
-                $paramsText .= $key.' '.$val.',';
-            }
-        }
 
-        if ($options !== null){
-            foreach ($options as $val){
-                $paramsText .= $val.',';
-            }
-        }
-
-        if (strlen($paramsText)>0){
-            $paramsText = substr($paramsText, 0, -1);
-        }
-
-        $queryText = 'CREATE TABLE "'.$table.'" ('.$paramsText.')';
-
-        $this->query($queryText);
-
-    }
-
-    public function dropTable($table)
-    {
-        $this->query("DROP  TABLE {$table}");
-    }
-    
-    public function tableIsExist($table)
-    {
-        $result = $this->select(
-            "SELECT table_name 
-                  FROM information_schema.tables  
-                  where table_schema='public' and table_name='{$table}'"
-        );
-
-        return Count($result) === 1;
-    }
+    /* RECORDS */
 
     public function recordIsExist($table, $conditions)
     {
@@ -285,6 +341,8 @@ class DBSQL
     public function deleteAllRecords($table){
         $this->query("DELETE FROM {$table}");
     }
+
+
 
     protected function prepareQueryConditionsText($conditions, $separator=" && ", $param_prefix=""){
 
