@@ -17,6 +17,7 @@ class DBSQL
         }
     }
 
+
     /* COMMON */
 
     public function connect($attr = null)
@@ -66,6 +67,23 @@ class DBSQL
     }
 
 
+    /* DATABASES */
+
+    public function createDatabase($database_name): void
+    {
+        $this->query("CREATE DATABASE $database_name;");
+    }
+
+    public function dropDatabase($database_name): void
+    {
+        $this->query("DROP DATABASE $database_name;");
+    }
+
+    public function exportDatabase($database, $file_name): void
+    {
+        exec("pg_dump -U $this->user -h localhost $database >> $file_name");
+    }
+    
     /* SCHEMAS */
 
     public function createSchema($schema_name):void
@@ -109,7 +127,6 @@ class DBSQL
 
         return Count($result) === 1;
     }
-
 
     public function createTable($table_name, $params=null, $options=null, $schema_name='public'):void
     {
