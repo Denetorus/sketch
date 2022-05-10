@@ -95,13 +95,12 @@ class RouterBase implements CommandInterface
             if (isset($_SESSION["is_console"]) && $_SESSION["is_console"])
             {
                 echo "\e[31m", "resource is unavailable\n", "\e[0m";
-                return "";
 
             }else{
 
                 header('Location: '.HOST.'/signin');
-                return "";
             }
+            return "";
         }
 
         $uri = $AvailablePath;
