@@ -38,19 +38,47 @@ class RouterBase implements CommandInterface
         return '';
     }
 
-    public function PathAvailableWithoutSignIn($uri){
 
-        $status = $_SESSION['status'];
-        foreach ($this->routesAvailableWithoutSignIn() as $uriPattern => $path) {
-            if ($status < $path['status']) continue;
+    public function inRoles($roles):bool
+    {
+        $user_roles = $_SESSION['roles'] ?? [];
 
-            if ($uri === $uriPattern) {
-                return $path['path'];
-            }
-            if (strpos($uri, $uriPattern)===0){
-                return $uri;
-            }
+        if (in_array('Full', $user_roles))
+            return true;
+
+        foreach ($roles as $role) {
+            if (in_array($role, $user_roles))
+                return true;
         }
+
+        return false;
+    }
+
+    public function PathAvailableWithoutSignIn($uri):string
+    {
+
+        $status = $_SESSION['status'] ?? -1;
+
+        foreach ($this->routesAvailableWithoutSignIn() as $uriPattern => $params) {
+
+            if ($status < ($params['status'] ?? -1)) continue;
+
+            $internal = $params['internal'] ?? false;
+            if ($uri === $uriPattern
+                || ($internal && strpos($uri, $uriPattern."\\")===0))
+            {
+                if (isset($params['roles'])){
+                    if (!$this->inRoles($params['roles']))
+                    {
+                        continue;
+                    }
+                }
+
+                return $params['path'] ?? $uri;
+            }
+
+        }
+
         return "";
     }
 
@@ -62,9 +90,17 @@ class RouterBase implements CommandInterface
 
         $AvailablePath = $this->PathAvailableWithoutSignIn($uri);
 
-        if ( $uri!=='signin' && $AvailablePath===""){
-            header('Location: '.HOST.'/signin');
+        if (isset($_SESSION["is_console"]) && $_SESSION["is_console"])
+        {
+            echo "\e[31m", "resource is unavailable\n", "\e[0m";
             return "";
+
+        }else{
+
+            if ( $uri!=='signin' && $AvailablePath===""){
+                header('Location: '.HOST.'/signin');
+                return "";
+            }
         }
 
         $uri = $AvailablePath;
