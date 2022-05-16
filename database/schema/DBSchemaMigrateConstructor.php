@@ -162,14 +162,14 @@ class DBSchemaMigrateConstructor
         $content = <<<EOT
 <?php
 
-".$file_header."
+$file_header
 
 class ".$class_name." extends ObjectMigration
 {
     public function up()
     {
         \$this->migrateBySchema(json_decode('
-            ".json_encode($this->difference->toArray(), JSON_PRETTY_PRINT)."
+            ".json_encode({$this->difference->toArray()}, JSON_PRETTY_PRINT)."
         ',true));
     }
 }
