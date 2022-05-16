@@ -159,6 +159,7 @@ class DBSchemaMigrateConstructor
 
         $class_name = "migrate_".date('YmdHis');
 
+        $jsonDiff = json_encode($this->difference->toArray(), JSON_PRETTY_PRINT);
         $content = <<<EOT
 <?php
 
@@ -169,7 +170,7 @@ class ".$class_name." extends ObjectMigration
     public function up()
     {
         \$this->migrateBySchema(json_decode('
-            ".json_encode({$this->difference->toArray()}, JSON_PRETTY_PRINT)."
+            $jsonDiff
         ',true));
     }
 }
