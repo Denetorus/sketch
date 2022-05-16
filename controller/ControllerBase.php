@@ -8,7 +8,7 @@ abstract class ControllerBase
 {
     public function render($fileName, $params = [])
     {
-        $fileName = VIEW.'/'.$fileName;
+        $fileName = ROOT.VIEW.'/'.$fileName;
 
         if (is_file($fileName)){
             $view = new ViewBase();
