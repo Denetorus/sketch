@@ -26,6 +26,9 @@ class DBSchemasDifference
      */
     public $present;
 
+    /**
+     * @param $name
+     */
     public function __construct($name="public")
     {
         $this->name = $name;

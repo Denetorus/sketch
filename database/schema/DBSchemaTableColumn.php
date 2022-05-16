@@ -30,6 +30,10 @@ class DBSchemaTableColumn
      */
     public $primary_key;
 
+    /**
+     * @param string $name
+     * @param array $data
+     */
     public function __construct(string $name, array $data=[])
     {
         $this->name = $name;
