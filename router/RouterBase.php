@@ -65,7 +65,7 @@ class RouterBase implements CommandInterface
 
             $internal = $params['internal'] ?? false;
             if ($uri === $uriPattern
-                || ($internal && strpos($uri, $uriPattern."\\")===0))
+                || ($internal && strpos($uri, $uriPattern."\\")!==false))
             {
                 if (isset($params['roles'])){
                     if (!$this->inRoles($params['roles']))
