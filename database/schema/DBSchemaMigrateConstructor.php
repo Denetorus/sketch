@@ -165,7 +165,7 @@ class DBSchemaMigrateConstructor
 
 $file_header
 
-class ".$class_name." extends ObjectMigration
+class $class_name extends ObjectMigration
 {
     public function up()
     {
