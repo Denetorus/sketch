@@ -111,14 +111,14 @@ class DBSchemaTableColumn
         if ($this->length!=="")
             $result['length'] = $this->length;
 
-        if (!$this->not_null)
+        if ($this->not_null)
             $result['not_null'] = true;
 
         if ($this->default!=="")
             $result['default'] = $this->default;
 
-        if (!$this->primary_key)
-            $result['primary_key'] = true;
+        if ($this->primary_key)
+            $result['primary_key'] = $this->primary_key;
 
         return $result;
 
