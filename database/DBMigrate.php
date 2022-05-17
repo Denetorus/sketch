@@ -29,7 +29,7 @@ class DBMigrate
             ["version"=>$class_name]
         );
 
-        echo "Migrate {$class_name} is execute \n";
+        echo "Migrate $class_name is execute \n";
 
     }
 
@@ -49,7 +49,7 @@ class DBMigrate
         $result = $this->getMigrationListAll();
 
         $migrated_versions = $this->db->select(
-            "SELECT version FROM $this->schema_name.version;"
+            "SELECT $this->schema_name.version FROM $this->schema_name.version;"
         );
 
         foreach ($migrated_versions as $migrated_version) {
@@ -64,7 +64,7 @@ class DBMigrate
     }
 
 
-    public function run($params=[])
+    public function run($params=[]): string
     {
         if ($this->checkVersionTable()){
             $list = $this->getMigrationListNew();
@@ -85,7 +85,7 @@ class DBMigrate
         }
 
         foreach ($list as $className) {
-            echo "Migrate {$className} \n";
+            echo "Migrate $className \n";
             $this->upOne($className);
         }
         echo "Migrate all is execute \n";

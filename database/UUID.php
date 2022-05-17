@@ -7,7 +7,8 @@ namespace sketch\database;
 class UUID
 {
 
-    static public function createUUID($trim = true){
+    static public function createUUID($trim = true): string
+    {
 
         // Windows
         if (function_exists('com_create_guid') === true) {
@@ -38,6 +39,5 @@ class UUID
             substr($charID, 20, 12).
             $rbrace;
     }
-
 
 }

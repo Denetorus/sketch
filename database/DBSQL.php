@@ -2,322 +2,448 @@
 
 namespace sketch\database;
 
-class DBSQL
+use Exception;
+use ExceptionDatabaseConnectParamMissing;
+
+abstract class DBSQL
 {
 
+    /**
+     * @var \PDO
+     */
     protected $db;
-    protected $dsn;
-    protected $user;
-    protected $password;
 
-    public function setAttributes($attr)
+    /**
+     * @param array $attr
+     * @throws ExceptionDatabaseConnectParamMissing
+     */
+    public function __construct(array $attr)
     {
-        foreach ($attr as $key => $val){
-            $this->$key = $val;
-        }
+        $this->connect($attr);
     }
-
 
     /* COMMON */
 
-    public function connect($attr = null)
+    /**
+     * @return array
+     */
+    public function getOptions():array
     {
-        if ($attr !== null){
-            $this->setAttributes($attr);
-        }
+        return [
+            // return associative arrays
+            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            // return Exception on Error
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            //Use server placeholders
+            \PDO::ATTR_EMULATE_PREPARES => false
+        ];
+    }
+
+    /**
+     * @param array $attr
+     * @return void
+     * @throws ExceptionDatabaseConnectParamMissing
+     */
+    public function connect(array $attr):void
+    {
+
+        if (!isset($attr['dsn']))
+            throw new ExceptionDatabaseConnectParamMissing('dsn');
+
+        if (!isset($attr['user']))
+            throw new ExceptionDatabaseConnectParamMissing('user');
+
+        if (!isset($attr['password']))
+            throw new ExceptionDatabaseConnectParamMissing('password');
 
         $this->db = new \PDO(
-            $this->dsn,
-            $this->user,
-            $this->password,
-            [
-                // возвращать ассоциативные массивы
-                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                // возвращать Exception в случае ошибки
-                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                //Использовать серверные плейсхолдеры
-                \PDO::ATTR_EMULATE_PREPARES => false
-            ]
+            $attr['dsn'],
+            $attr['user'],
+            $attr['password'],
+            $this->getOptions()
         );
     }
-    
-    public function query($query, $params = array())
+
+    /**
+     * @param string $query
+     * @param array $params
+     * @return void
+     */
+    public function onQueryError(string $query, array $params):void
     {
-        $res = $this->db->prepare($query);
-        $res->execute($params);
-        return $res;
     }
-    
-    public function select($query, $params = array()): ?array
+
+    /**
+     * @param string $query
+     * @param array $params
+     * @return bool
+     */
+    public function query(string $query, array $params=[]): bool
     {
-        $result = $this->query($query, $params);
-        if ($result) {
+        $sth = $this->db->prepare($query);
+        return $sth->execute($params);
+    }
+
+    /**
+     * @param string $query
+     * @param array $params
+     * @return false|\PDOStatement
+     */
+    public function queryResult(string $query, array $params=[])
+    {
+        $sth = $this->db->prepare($query);
+        $sth->execute($params);
+        return $sth;
+    }
+
+    /**
+     * @param string $query
+     * @param array $params
+     * @return array
+     */
+    public function select(string $query, array $params=[]): array
+    {
+        $result = $this->queryResult($query, $params);
+        if ($result)
             return $result->fetchAll();
-        }
-        return null;
+
+        $this->onQueryError($query, $params);
+        return [];
     }
-    
-    public function selectOne($query, $params = array()): ?array
+
+    /**
+     * @param string $query
+     * @param array $params
+     * @return array
+     */
+    public function selectOne(string $query, array $params=[]): array
     {
-        $result = $this->query($query, $params);
-        if ($result) {
+        $result = $this->queryResult($query, $params);
+        if ($result)
             return $result->fetch();
-        }
-        return null;
+
+        $this->onQueryError($query, $params);
+        return [];
     }
 
 
     /* DATABASES */
 
-    public function createDatabase($database_name): void
+    /**
+     * @param string $database_name
+     * @return void
+     */
+    public function createDatabase(string $database_name): void
     {
         $this->query("CREATE DATABASE $database_name;");
     }
 
+    /**
+     * @param $database_name
+     * @return void
+     */
     public function dropDatabase($database_name): void
     {
         $this->query("DROP DATABASE $database_name;");
     }
 
-    public function exportDatabase($database, $file_name): void
-    {
-        exec("pg_dump -U $this->user -h localhost $database >> $file_name");
-    }
-    
+    /**
+     * @param string $database
+     * @param string $file_name
+     * @param array $attr
+     * @return void
+     * @throws Exception
+     */
+    abstract public function exportDatabase(string $database, array $attr, string $file_name): void;
+
+
     /* SCHEMAS */
 
-    public function createSchema($schema_name):void
-    {
-        $this->query("CREATE SCHEMA IF NOT EXISTS $schema_name;");
-    }
-
-    public function getSchemasNames(): array
-    {
-        $result = [];
-
-        $schemas =  $this->query("
-            SELECT table_schema 
-            FROM information_schema.tables
-            WHERE table_schema NOT IN ('information_schema', 'pg_catalog') 
-                AND table_type = 'BASE TABLE'
-            GROUP BY
-	            table_schema");
-
-        foreach ($schemas as $schema) {
-            $result[] = $schema["table_schema"];
-        }
-
-        return $result;
-    }
+    /**
+     * @param string $schema_name
+     * @return void
+     */
+    abstract public function createSchema(string $schema_name):void;
+    /**
+     * @return array
+     */
+    abstract public function getSchemasNames(): array;
 
 
     /* TABLES */
 
-    public function tableIsExist($table_name,$schema_name='public'): bool
-    {
-        $result = $this->select(
-            "SELECT table_name 
-                  FROM information_schema.tables  
-                  where table_schema=:schema_name and table_name=:table_name",
-            [
-                "schema_name"=>$schema_name,
-                "table_name"=>$table_name
-            ]
-        );
+    /**
+     * @param string $table_name
+     * @param string $schema_name
+     * @return bool
+     */
+    abstract public function tableIsExist(string $table_name, string $schema_name='public'): bool;
 
-        return Count($result) === 1;
-    }
-
-    public function createTable($table_name, $params=null, $options=null, $schema_name='public'):void
+    /**
+     * @param string $table_name
+     * @param array|null $params
+     * @param array|null $options
+     * @param string $schema_name
+     * @return void
+     */
+    public function createTable(string $table_name, array $params=[], array $options=[], string $schema_name='public'):void
     {
 
         $paramsText = '';
-        if ($params !== null){
-            foreach ($params as $key=>$val){
-                $paramsText .= $key.' '.$val.',';
-            }
+        foreach ($params as $key=>$val){
+            $paramsText .= $key.' '.$val.',';
         }
 
-        if ($options !== null){
-            foreach ($options as $val){
-                $paramsText .= $val.',';
-            }
+        foreach ($options as $val){
+            $paramsText .= $val.',';
         }
 
         if (strlen($paramsText)>0){
             $paramsText = substr($paramsText, 0, -1);
         }
 
-        $queryText = "CREATE TABLE $schema_name.$table_name ($paramsText)";
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $queryText = "CREATE TABLE $table_name ($paramsText)";
 
         $this->query($queryText);
 
     }
 
-    public function dropTable($table_name, $schema_name='public')
+    /**
+     * @param string $table_name
+     * @param string $schema_name
+     * @return void
+     */
+    public function dropTable(string $table_name, string $schema_name='public')
     {
-        $this->query("DROP  TABLE $schema_name.$table_name");
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $this->query("DROP  TABLE $table_name");
     }
 
-    public function getTablesBySchema($schema_name='public'): array
-    {
-        $result = [];
-        $queryResult = $this->select(
-            "SELECT tablename as table_name 
-                    FROM pg_catalog.pg_tables 
-                    where schemaname=:schema_name;",
-            ["schema_name"=>$schema_name]
-        );
+    /**
+     * @param string $schema_name
+     * @return array
+     */
+    abstract public function getTablesBySchema(string $schema_name='public'): array;
 
-        foreach ($queryResult as $item) {
-            $result[] = $item["table_name"];
-        }
-
-        return $result;
-    }
-
-    public function getPrimaryKeysBySchema($schema_name='public'): array
-    {
-        return $this->select(
-            "SELECT c.table_name, c.column_name
-                    FROM information_schema.table_constraints tc 
-                        JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name) 
-                        JOIN information_schema.columns AS c ON 
-                            c.table_schema = tc.constraint_schema
-                                AND tc.table_name = c.table_name
-                                AND ccu.column_name = c.column_name
-                    WHERE constraint_type = 'PRIMARY KEY' and constraint_schema =:schema_name;",
-            ["schema_name"=>$schema_name]
-        );
-    }
+    /**
+     * @param string $schema_name
+     * @return array
+     */
+    abstract public function getPrimaryKeysBySchema(string $schema_name='public'): array;
 
 
     /* COLUMNS */
 
-    public function addColumn($table_name, $column_name, $column_content, $schema_name='public')
+    /**
+     * @param string $table_name
+     * @param string $column_name
+     * @param string $column_content
+     * @param string $schema_name
+     * @return void
+     */
+    public function addColumn(string $table_name, string $column_name, string $column_content, string $schema_name='public')
     {
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
         $this->query(
-            "ALTER TABLE $schema_name.$table_name ADD COLUMN $column_name $column_content;"
+            "ALTER TABLE $table_name ADD COLUMN $column_name $column_content;"
         );
     }
 
-    public function dropColumn($table_name, $column_name, $schema_name='public')
+    /**
+     * @param string $table_name
+     * @param string $column_name
+     * @param string $schema_name
+     * @return void
+     */
+    public function dropColumn(string $table_name, string $column_name, string $schema_name='public')
     {
-        $this->query("ALTER TABLE $schema_name.$table_name DROP COLUMN IF EXISTS $column_name");
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $this->query("ALTER TABLE $table_name DROP COLUMN IF EXISTS $column_name");
     }
 
-    public function changeColumn($table_name, $column_name, $column_content, $schema_name='public')
+    /**
+     * @param string $table_name
+     * @param string $column_name
+     * @param string $column_content
+     * @param string $schema_name
+     * @return void
+     */
+    public function changeColumn(string $table_name, string $column_name, string $column_content, string $schema_name='public')
     {
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
         $this->query(
-            "ALTER TABLE $schema_name.$table_name ALTER COLUMN $column_name $column_content;"
+            "ALTER TABLE $table_name ALTER COLUMN $column_name $column_content;"
         );
     }
 
-    public function getColumnsBySchema($schema_name='public'): array
-    {
-        return $this->select("
-            SELECT 
-                   table_name as table_name, 
-                   column_name as column_name, 
-                   column_default as column_default, 
-                   is_nullable='NO' as column_not_null,
-                   data_type as column_data_type,
-                   character_maximum_length as column_max_length
-            FROM information_schema.columns
-            WHERE table_schema=:schema_name;
-            ",
-            ["schema_name"=>$schema_name]
-        );
-    }
+    /**
+     * @param string $schema_name
+     * @return array
+     */
+    abstract public function getColumnsBySchema(string $schema_name='public'): array;
 
-    public function getTableColumnsBySchema($table_name, $schema_name='public'): array
-    {
-        return $this->select(
-            "SELECT * 
-                    FROM information_schema.columns 
-                    where table_schema=:schema_name and table_name=:table_name;",
-            [
-                "table_name" => $table_name,
-                "schema_name" => $schema_name
-            ]
-        );
-    }
+    /**
+     * @param string $table_name
+     * @param string $schema_name
+     * @return array
+     */
+    abstract public function getTableColumnsBySchema(string $table_name, string $schema_name='public'): array;
 
 
     /* RECORDS */
 
-    public function recordIsExist($table, $conditions): bool
+    /**
+     * @param string $table_name
+     * @param array $conditions
+     * @param string $schema_name
+     * @return bool
+     */
+    public function recordIsExist(string $table_name, array $conditions, string $schema_name='public'): bool
     {
-        if (!is_array($conditions)){
-            $conditions = ["id" => $conditions];
-        }
-        $query_text = "SELECT * FROM $table WHERE {$this->prepareQueryConditionsText($conditions)}";
-        $result = $this->select($query_text, $conditions);
-        return Count($result) !== 0;
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $result = $this->select(
+            "SELECT * FROM $table_name WHERE {$this->prepareQueryConditionsText($conditions)}",
+            $conditions
+        );
+        return count($result) !== 0;
     }
-    
-    public function getRecords($table, $conditions): ?array
+
+    /**
+     * @param string $table_name
+     * @param array $conditions
+     * @param string $schema_name
+     * @return array
+     */
+    public function getRecords(string $table_name, array $conditions, string $schema_name='public'): array
     {
-        if (!is_array($conditions)){
-            $conditions = ["id" => $conditions];
-        }
 
-        $query_text = "SELECT * FROM $table WHERE {$this->prepareQueryConditionsText($conditions)};";
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
 
-        return $this->select($query_text, $conditions);
+        return $this->select(
+            "SELECT * FROM $table_name WHERE {$this->prepareQueryConditionsText($conditions)};",
+            $conditions
+        );
 
     }
-    
-    public function getList($table,$schema_name='public'): ?array
-    {
-        return $this->select("SELECT * FROM $schema_name.$table");
-    }
-    
-    public function getRecord($table, $conditions): ?array
-    {
-        if (!is_array($conditions)){
-            $conditions = ["id" => $conditions];
-        }
-        $query_text = "SELECT * FROM $table WHERE {$this->prepareQueryConditionsText($conditions)}";
 
-        $result = $this->selectOne($query_text, $conditions);
-        if ($result) {
-            return $result;
-        }
-        return null;
+    /**
+     * @param string $table_name
+     * @param string $schema_name
+     * @return array
+     */
+    public function getList(string $table_name, string $schema_name='public'): array
+    {
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        return $this->select("SELECT * FROM $table_name");
     }
-    
-    public function setRecord($table, $params, $withNewID=true): void
+
+    /**
+     * @param string $table_name
+     * @param array $conditions
+     * @param string $schema_name
+     * @return array
+     */
+    public function getRecord(string $table_name, array $conditions, string $schema_name='public'): array
+    {
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        return $this->selectOne(
+            "SELECT * FROM $table_name WHERE {$this->prepareQueryConditionsText($conditions)}",
+            $conditions
+        );
+
+    }
+
+
+    /**
+     * @param string $table_name
+     * @param array $params
+     * @param string $schema_name
+     * @return void
+     */
+    public function setRecord(string $table_name, array $params, string $schema_name='public'): void
     {
 
+        $query_text = $this->getRecordInsertQuery($table_name, $params, $schema_name);
+
+        $this->query(
+            $query_text,
+            $params
+        );
+
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $params
+     * @param string $PK_name
+     * @param string $schema_name
+     * @return array
+     */
+    public function setRecordAndReturnPrimaryKey(
+        string $table_name,
+        array $params,
+        string $PK_name,
+        string $schema_name='public'):array
+    {
+
+        $query_text = $this->getRecordInsertQuery($table_name, $params, $schema_name);
+
+        return $this->selectOne(
+            $query_text." RETURNING  $PK_name",
+            $params
+        );
+
+    }
+
+    private function getRecordInsertQuery(string $table_name, array $params, string $schema_name='public'):string
+    {
         $symbol = "";
         $paramsName = "";
         $valueName = "";
         foreach ( $params as $key => $val) {
-            if ($withNewID and $key === "id") {
-                unset($params["id"]);
-                continue;
-            }
             $paramsName .= $symbol.$key;
             $valueName .= $symbol." :".$key;
             $symbol = ", ";
         }
 
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
 
-        $this->query(
-            "INSERT INTO $table ($paramsName) VALUES ($valueName)",
-            $params
-        );
+        return "INSERT INTO $table_name ($paramsName) VALUES ($valueName)";
 
     }
-    
-    public function updateRecord($table, $conditions, $params)
-    {
-        if (!is_array($conditions)){
-            $conditions = ["id" => $conditions];
-        }
 
-        $query_text = "UPDATE $table SET 
+    /**
+     * @param string $table_name
+     * @param array $conditions
+     * @param array $params
+     * @param string $schema_name
+     * @return void
+     */
+    public function updateRecord(string $table_name, array $conditions, array $params, string $schema_name='public'):void
+    {
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $query_text = "UPDATE $table_name SET 
                         {$this->prepareQueryConditionsText($params, ",", "_S_")}
                        WHERE 
                         {$this->prepareQueryConditionsText($conditions," && ","_W_")}";
@@ -333,55 +459,61 @@ class DBSQL
         $this->query($query_text, $sendParams);
 
     }
-    
-    public function createRecord($table_name): array
+
+    /**
+     * @param string $table_name
+     * @return array
+     */
+    abstract public function createRecord(string $table_name): array;
+
+    /**
+     * @param string $table_name
+     * @param array $conditions
+     * @param string $schema_name
+     * @return void
+     */
+    public function deleteRecord(string $table_name, array $conditions, string $schema_name='public'):void
     {
-        $columns = $this->select(
-            "SELECT column_name, column_default 
-                  FROM information_schema.columns 
-                  WHERE table_schema='public' and table_name='$table_name'"
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $this->query(
+            "DELETE FROM $table_name WHERE {$this->prepareQueryConditionsText($conditions)};",
+            $conditions
         );
-
-        $items = [];
-        foreach ($columns as $column) {
-            $items[$column["column_name"]]=$column["column_default"];
-        }
-        return $items;
     }
-    
-    public function deleteRecord($table, $conditions, $schema_name='public')
+
+    /**
+     * @param string $table_name
+     * @param string $schema_name
+     * @return void
+     */
+    public function deleteAllRecords(string $table_name, string $schema_name='public'):void
     {
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
 
-        if (!is_array($conditions)){
-            $conditions = ["id" => $conditions];
-        }
-
-        $query_text = "DELETE FROM $schema_name.$table WHERE {$this->prepareQueryConditionsText($conditions)};";
-
-        $this->query($query_text, $conditions);
-
-    }
-    
-    public function deleteAllRecords($table, $schema_name='public'):void
-    {
-        $this->query("DELETE FROM $schema_name.$table;");
+        $this->query("DELETE FROM $table_name;");
     }
 
 
-
-    protected function prepareQueryConditionsText($conditions, $separator=" && ", $param_prefix=""): string
+    /**
+     * @param array $conditions
+     * @param string $separator
+     * @param string $param_prefix
+     * @return string
+     */
+    protected function prepareQueryConditionsText(array $conditions, string $separator=" && ", string $param_prefix=""): string
     {
 
         $query_text = "" ;
 
-        $countConditions = Count($conditions);
-        if ( $countConditions !== 0 ) {
-            foreach ($conditions as $key=>$value){
-                $countConditions -= 1;
-                $query_text .= $key."=:".$param_prefix.$key;
-                if ($countConditions !== 0){
-                    $query_text .= $separator;
-                }
+        $countConditions = count($conditions);
+        foreach ($conditions as $key=>$value){
+            $query_text .= $key."=:".$param_prefix.$key;
+            $countConditions--;
+            if ($countConditions !== 0){
+                $query_text .= $separator;
             }
         }
 

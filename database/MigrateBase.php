@@ -10,6 +10,7 @@ class MigrateBase implements CommandInterface
 
 
     public function up(){}
+
     public function down(){}
 
     public function __construct($db)
