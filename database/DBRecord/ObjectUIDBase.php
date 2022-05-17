@@ -1,5 +1,8 @@
 <?php
-namespace sketch\database;
+
+namespace sketch\database\DBRecord;
+
+use sketch\database\DBRecord;
 
 abstract class ObjectUIDBase implements DBRecord
 {

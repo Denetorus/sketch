@@ -1,5 +1,7 @@
 <?php
 
+namespace sketch\database\DBSQL;
+
 use sketch\database\DBSQL;
 
 class DBPostSQL extends DBSQL
