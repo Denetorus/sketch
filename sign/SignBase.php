@@ -2,65 +2,68 @@
 
 namespace sketch\sign;
 
-use sketch\CommandInterface;
-use sketch\CommandObj;
-use sketch\SK;
+use sketch\exceptions\ExceptionSignOptionsNotCorrect;
 
-class SignBase implements CommandInterface
+abstract class SignBase
 {
-    private $User = null;
+    /**
+     * @var array
+     */
+    public $signedResult = [];
 
-    public function options()
+    /**
+     * @return array
+     */
+    abstract public function options():array;
+
+    /**
+     * @throws ExceptionSignOptionsNotCorrect
+     */
+    public function signOff():void
     {
-        return null;
+
+        $signOptions = $this->options();
+
+        if (empty($signOptions))
+            throw new ExceptionSignOptionsNotCorrect("not filled");
+
+        if (isset($signOptions['class']))
+            throw new ExceptionSignOptionsNotCorrect('not content parameter class');
+
+        $SM = new $signOptions['class'];
+        $SM->clear();
+
+        $this->signedResult = $SM->signedIn() ? $SM->signedInfo() : null;
+        $_SESSION['signed_data'] = $this->signedResult;
+
     }
 
-    public function getSignParams()
+    /**
+     * @return array
+     * @throws ExceptionSignOptionsNotCorrect
+     */
+    public function run():array
     {
-        return $this->User;
-    }
+        $signOptions = $this->options();
 
-    public function signOff($params=[])
-    {
-        $SignOptions = $this->options();
+        if (empty($signOptions))
+            throw new ExceptionSignOptionsNotCorrect("not filled");
 
-        if ($SignOptions !== null && isset($SignOptions['class'])) {
+        if (isset($signOptions['class']))
+            throw new ExceptionSignOptionsNotCorrect('not content parameter class');
 
-            $SM = new $SignOptions['class'];
-            unset($SignOptions['class']);
-            foreach ($SignOptions as $key => $value) {
-                $SM->{$key} = $value;
-            }
 
-            $SM->Clear();
+        $SM = $signOptions['class'];
 
+        unset($signOptions['class']);
+        foreach ($signOptions as $key => $value) {
+            $SM->{$key} = $value;
         }
 
+        $SM->signIn();
+
+        return $SM->signedInfo();
+
     }
 
-    public function run($params=[])
-    {
-        $SignOptions = $this->options();
-
-        if ($SignOptions !== null && isset($SignOptions['class'])) {
-
-            $SM = new $SignOptions['class'];
-            unset($SignOptions['class']);
-            foreach ($SignOptions as $key => $value) {
-                $SM->{$key} = $value;
-            }
-
-            $SM->signIn();
-            $this->User = $SM->signedIn() ? $SM->signedInfo() : null;
-            $_SESSION['data'] = $this->User;
-
-        }
-
-        SK::add(
-            new CommandObj(
-                $params['router'],
-                $this->getSignParams()
-            )
-        );
-    }
 }

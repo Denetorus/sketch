@@ -7,30 +7,35 @@ use sketch\sign\SignModelInterface;
 class SignErrorModel implements SignModelInterface
 {
 
-    private $id = null;
+    private $id = -1;
     private $login = '';
     private $status = -1;
 
-    public function signIn(){
+    /**
+     * @return void
+     */
+    public function signIn():void
+    {
     }
 
-    public function signedIn(){
+    public function signedIn():bool
+    {
         return false;
     }
-    public function signedInfo()
+    public function signedInfo():array
     {
         return [
             'id' => $this->id,
             'login' => $this->login,
-             'status' => $this->status
+            'status' => $this->status
        ];
     }
 
-    public function clear(){
-        $this->id = null;
+    public function clear()
+    {
+        $this->id = -1;
         $this->login = '';
         $this->status = -1;
-
     }
 
 }

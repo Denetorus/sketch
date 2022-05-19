@@ -2,13 +2,19 @@
 
 namespace sketch\router;
 
-use sketch\SK;
-use sketch\CommandInterface;
-
-class RouterBase implements CommandInterface
+class RouterBase
 {
 
-    public function routesAvailableWithoutSignIn(){
+    /**
+     * @var string
+     */
+    public $controller_path='web';
+
+    /**
+     * @return array[]
+     */
+    public function routes():array
+    {
         return [
             'signup' => [
                 'path' => 'signup',
@@ -21,7 +27,10 @@ class RouterBase implements CommandInterface
         ];
     }
 
-    public function routes()
+    /**
+     * @return string[]
+     */
+    public function routesMasks():array
     {
         return [
             '([a-z]+)/([a-z]+)' => '$1/$2',
@@ -30,15 +39,21 @@ class RouterBase implements CommandInterface
         ];
     }
 
-    public function getUri()
+    /**
+     * @return string
+     */
+    public function getUri():string
     {
-        if (!empty($_SERVER['REQUEST_URI'])){
-            return trim($_SERVER['REQUEST_URI'],'/');
-        }
-        return '';
+        if (empty($_SERVER['REQUEST_URI']))
+            return '';
+
+        return trim($_SERVER['REQUEST_URI'],'/');
     }
 
-
+    /**
+     * @param $roles
+     * @return bool
+     */
     public function inRoles($roles):bool
     {
         $user_roles = $_SESSION['roles'] ?? [];
@@ -54,12 +69,16 @@ class RouterBase implements CommandInterface
         return false;
     }
 
-    public function PathAvailableWithoutSignIn($uri):string
+    /**
+     * @param $uri
+     * @return string
+     */
+    public function uriTransform($uri):string
     {
 
         $status = $_SESSION['status'] ?? -1;
 
-        foreach ($this->routesAvailableWithoutSignIn() as $uriPattern => $params) {
+        foreach ($this->routes() as $uriPattern => $params) {
 
             if ($status < ($params['status'] ?? -1)) continue;
 
@@ -79,69 +98,64 @@ class RouterBase implements CommandInterface
 
         }
 
-        return "";
+        return '';
     }
 
-    public function run($signParams=null)
+    /**
+     * @return void
+     */
+    public function run():void
     {
-        if (!isset($_SESSION['status'])) $_SESSION['status']=-1;
+        if (!isset($_SESSION['status']))
+            $_SESSION['status']=-1;
 
         $uri = $this->getUri();
 
-        $AvailablePath = $this->PathAvailableWithoutSignIn($uri);
+        $uri = $this->uriTransform($uri);
 
-        if ( $uri!=='signin' && $AvailablePath===""){
+        if ( $uri!=='signin' && $uri!=='' ){
 
             if (isset($_SESSION["is_console"]) && $_SESSION["is_console"])
-            {
                 echo "\e[31m", "resource is unavailable\n", "\e[0m";
-
-            }else{
-
+            else
                 header('Location: '.HOST.'/signin');
-            }
-            return "";
+
+            return;
         }
 
-        $uri = $AvailablePath;
+        foreach ($this->routesMasks() as $uriPattern => $path) {
 
+            if (!preg_match("~$uriPattern~", $uri))
+                continue;
 
-        $controller_path = SK::$controllers_path;
-        foreach ($this->routes() as $uriPattern => $path) {
-            if (preg_match("~$uriPattern~", $uri)) {
+            $internalRoute = preg_replace("~$uriPattern~", $path, $uri);
+            $parameters = explode('/', $internalRoute);
+            $controllerName = ucfirst(array_shift($parameters)).'Controller';
 
-                $internalRoute = preg_replace("~$uriPattern~", $path, $uri);
-                $parameters = explode('/', $internalRoute);
-                $controllerName = ucfirst(array_shift($parameters)).'Controller';
+            $controllerFile = ROOT."/controller/$this->controller_path/$controllerName.php";
+            if (! file_exists($controllerFile))
+                break;
 
-                $controllerFile = CONTROLLER ."/". $controller_path ."/". $controllerName . '.php';
-                if (! file_exists($controllerFile)) {
-                    break;
-                }
+            $actionName = ucfirst(array_shift($parameters));
+            if ($actionName === '')
+                $actionName='index';
 
-                $actionName = ucfirst(array_shift($parameters));
-                if ($actionName === '') {
-                    $actionName='index';
-                }
-                $actionName = 'action'.$actionName;
+            $actionName = 'action'.$actionName;
 
-                include_once($controllerFile);
+            include_once($controllerFile);
 
-                $className = "controller\\".$controller_path.'\\'.$controllerName;
-                $controllerObject = new $className;
+            $className = 'controller\\'.$this->controller_path.'\\'.$controllerName;
+            $controllerObject = new $className;
 
-                $result = call_user_func_array(array($controllerObject, $actionName), $parameters);
+            $result = call_user_func_array(array($controllerObject, $actionName), $parameters);
 
-                if ($result === null) {
-                    break;
-                }
-
+            if ($result !== null)
                 echo $result;
 
-                break;
-            }
+            break;
+
         }
-        return "";
+
     }
 
 }

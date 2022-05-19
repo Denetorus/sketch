@@ -2,46 +2,89 @@
 
 namespace sketch\sign\model;
 
+use sketch\database\DBBase;
 use sketch\sign\SignModelInterface;
 
 class SignDBModel implements SignModelInterface
 {
 
+    /**
+     * @var DBBase|null
+     */
     public $db = null;
+    /**
+     * @var mixed|null
+     */
     public $user = null;
-    private $id = null;
+    /**
+     * @var int
+     */
+    public $cookieTime = 2592000;
+
+    /**
+     * @var bool
+     */
+    public $useCookie = false;
+
+    /**
+     * @var integer
+     */
+    private $id = -1;
+    /**
+     * @var string
+     */
     private $login = '';
+    /**
+     * @var string
+     */
     private $password = '';
+    /**
+     * @var string
+     */
+    private $password_hash = '';
+    /**
+     * @var int
+     */
     private $status = -1;
-    private $CookieTime = 2592000;
 
-    public function signIn()
+    /**
+     * @return void
+     */
+    public function signIn():void
     {
-        if (isset($_POST['login']) && isset($_POST['password'])) {
-            if ($this->SignInByLoginPassword($_POST['login'], $_POST['password'], false)) {
-                return;
-            }
-        }
 
-        if ($this->SignInBySession()){
+        if ($this->login==='' && isset($_POST['login']))
+            $this->login = $_POST['login'];
+
+        if ($this->password==='' && isset($_POST['password']))
+            $this->password = $_POST['password'];
+
+        if ($this->login!=='' && $this->SignInByLoginPassword($_POST['password']))
             return;
-        }
 
-        if ($this->SignInByCookies()){
+        if ($this->SignInBySession())
             return;
-        }
 
-        $this->Clear();
+        if ($this->useCookie && $this->SignInByCookies())
+            return;
+
+        $this->clear();
 
     }
 
-    public function signedIn()
+    /**
+     * @return bool
+     */
+    public function signedIn(): bool
     {
 
-        return ($this->id != null);
+        return ($this->id !== -1);
     }
 
-    public function signedInfo()
+    /**
+     * @return array
+     */
+    public function signedInfo():array
     {
         return [
             'id' => $this->id,
@@ -52,10 +95,15 @@ class SignDBModel implements SignModelInterface
 
     // ========= AUTHENTICATION =========
 
-    public function Clear(){
+    /**
+     * @return void
+     */
+    public function clear():void
+    {
 
-        $this->id = null;
+        $this->id = -1;
         $this->password = '';
+        $this->password_hash = '';
         $this->login = '';
         $this->status = -1;
         $this->DeleteSignCookies();
@@ -63,62 +111,71 @@ class SignDBModel implements SignModelInterface
 
     }
 
-    private function SignInBySession(){
+    /**
+     * @return bool
+     */
+    private function SignInBySession():bool
+    {
+        if (!isset($_SESSION['id_user']) || isset($_SESSION['password_hash']))
+            return false;
 
-        if (isset($_SESSION['id_user']) && isset($_SESSION['password'])){
-            $this->id = $_SESSION['id_user'];
-            if (!$this->SetLoginPasswordByID()){
-                return false;
-            }
+        $this->id = $_SESSION['id_user'];
 
-            if ($_SESSION['password'] !== $this->password) {
-                return false;
-            }
-
-            return true;
-
+        if (!$this->SetLoginPasswordByID()){
+            return false;
         }
 
-        return false;
-
-    }
-    private function SignInByCookies(){
-
-        if (isset($_COOKIE['id_user']) & isset($_COOKIE['password']))
-        {
-            $this->id = $_COOKIE['id_user'];
-            if (!$this->SetLoginPasswordByID()){
-                return false;
-            }
-
-            if (!password_verify($_SESSION['password'], $this->password)) {
-                $this->Clear();
-                return false;
-            }
-
-            $this->AddSignCookies();
-            return true;
-
+        if ($_SESSION['password_hash'] !== $this->password_hash) {
+            return false;
         }
-        return false;
+
+        return true;
 
     }
-    private function SignInByLoginPassword($login, $password, $remember){
 
-        $this->login = $login;
+    /**
+     * @return bool
+     */
+    private function SignInByCookies():bool
+    {
+
+        if (!isset($_COOKIE['id_user']) || !isset($_COOKIE['password_hash']))
+            return false;
+
+        $this->id = $_COOKIE['id_user'];
+        if (!$this->SetLoginPasswordByID()){
+            return false;
+        }
+
+        if ($_SESSION['password_hash'] !== $this->password_hash) {
+            $this->clear();
+            return false;
+        }
+
+        $this->AddSignCookies();
+        return true;
+
+    }
+
+    /**
+     * @return bool
+     */
+    private function SignInByLoginPassword(): bool
+    {
+
         if (!$this->SetIDPasswordByLogin()){
-            $this->Clear();
+            $this->clear();
             return false;
         }
 
-        if (!password_verify($password, $this->password)) {
-            $this->Clear();
+        if (!password_verify($this->password, $this->password_hash)) {
+            $this->clear();
             return false;
         }
 
-        //if ($remember) {
-        //    $this->AddSignCookies();
-        //}
+        if ($this->useCookie) {
+            $this->AddSignCookies();
+        }
 
         $this->AddSignSessions();
 
@@ -128,69 +185,96 @@ class SignDBModel implements SignModelInterface
 
     // =========== COOKIES =============
 
-    private function AddSignCookies(){
-        setcookie('id_user', $this->id, time()+ $this->CookieTime , '/');
-        setcookie('user', $this->login, time()+ $this->CookieTime , '/');
-        setcookie('password', $this->password, time()+ $this->CookieTime , '/');
-        setcookie('status', $this->status, time()+ $this->CookieTime , '/');
+    /**
+     * @return void
+     */
+    private function AddSignCookies()
+    {
+        setcookie('id_user', $this->id, time()+ $this->cookieTime , '/');
+        setcookie('user', $this->login, time()+ $this->cookieTime , '/');
+        setcookie('password_hash', $this->password_hash, time()+ $this->cookieTime , '/');
+        setcookie('status', $this->status, time()+ $this->cookieTime , '/');
     }
-    private function DeleteSignCookies(){
+
+    /**
+     * @return void
+     */
+    private function DeleteSignCookies()
+    {
         setcookie('user', '', 0, '/');
-        setcookie('password', '', 0, '/');
+        setcookie('password_hash', '', 0, '/');
         setcookie('id_user', '', 0, '/');
         setcookie('status', '', 0, '/');
     }
 
     //  =========== SESSIONS ===========
 
-    private function AddSignSessions(){
+    /**
+     * @return void
+     */
+    private function AddSignSessions()
+    {
         $_SESSION['id_user'] = $this->id;
         $_SESSION['user'] = $this->login;
         $_SESSION['status'] = $this->status;
-        $_SESSION['password'] = $this->password;
+        $_SESSION['password_hash'] = $this->password_hash;
     }
-    private function DeleteSignSession(){
+
+    /**
+     * @return void
+     */
+    private function DeleteSignSession()
+    {
 
         unset($_SESSION['id_user']);
         unset($_SESSION['user']);
-        unset($_SESSION['password']);
+        unset($_SESSION['password_hash']);
         $_SESSION['status']=-1;
 
     }
 
     //  ====== GET BY DATABASE =======
 
-    public function SetIDPasswordByLogin(){
+    /**
+     * @return bool
+     */
+    public function SetIDPasswordByLogin():bool
+    {
 
         $this->user->loadByLogin($this->login);
 
-        if ($this->user->props !== null)
+        if (!empty($this->user->props))
         {
             $this->id = $this->user->props['id'];
-            $this->password = $this->user->props['password_hash'];
+            $this->password_hash = $this->user->props['password_hash'];
             $this->status = $this->user->props['status'];
             return true;
         }
 
-        $this->id = null;
-        $this->password = "";
+        $this->id = -1;
+        $this->password_hash = '';
         return false;
     }
-    public function SetLoginPasswordByID(){
+
+    /**
+     * @return bool
+     */
+    public function SetLoginPasswordByID():bool
+    {
 
         $this->user->ref = $this->id;
         $this->user->load();
 
-        if ($this->user->props !== null)
+        if (!empty($this->user->props))
         {
             $this->login = $this->user->props['login'];
-            $this->password = $this->user->props['password_hash'];
+            $this->password_hash = $this->user->props['password_hash'];
             $this->status = $this->user->props['status'];
             return true;
         }
 
-        $this->id = null;
-        $this->password = "";
+        $this->id = -1;
+        $this->password = '';
         $this->status = -1;
         return false;
     }

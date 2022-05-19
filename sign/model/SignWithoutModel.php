@@ -11,13 +11,25 @@ class SignWithoutModel implements SignModelInterface
     private $login = 'guest';
     private $status = 1;
 
-    public function signIn(){
+    /**
+     * @return void
+     */
+    public function signIn():void
+    {
     }
 
-    public function signedIn(){
+    /**
+     * @return bool
+     */
+    public function signedIn():bool
+    {
         return true;
     }
-    public function signedInfo()
+
+    /**
+     * @return array
+     */
+    public function signedInfo():array
     {
         return [
             'id' => $this->id,
@@ -26,11 +38,14 @@ class SignWithoutModel implements SignModelInterface
         ];
     }
 
-    public function clear(){
-        $this->id = null;
+    /**
+     * @return void
+     */
+    public function clear():void
+    {
+        $this->id = -1;
         $this->login = '';
         $this->status = -1;
-
     }
 
 }

@@ -2,122 +2,162 @@
 
 namespace sketch;
 
+use sketch\exceptions\ExceptionRouterModelNotChosen;
+use sketch\exceptions\ExceptionSignModelNotChosen;
+use sketch\exceptions\ExceptionSignOptionsNotCorrect;
+use sketch\router\RouterBase;
+use sketch\sign\SignBase;
+
 class SK
 {
+    /**
+     * @var array
+     */
     private static $props = [];
+    /**
+     * @var array
+     */
     private static $listCommands = [];
+    /**
+     * @var bool
+     */
     private static $isRun = false;
-    private static $router = "";
-    private static $sign = "";
+    /**
+     * @var array
+     */
+    public static $signInfo = [
+        'id' => -1,
+        'login' => '',
+        'status' => -1
+    ];
+    /**
+     * @var string
+     */
     public static $controllers_path = "";
-
-    public static $settings_default = [
-        "router" => "sketch/router/RouterBase",
-        "controllers_path" => "controller",
-        "sign" => "sketch/sign/SignBase",
+    /**
+     * @var string[]
+     */
+    public static $settings = [
+        'controllers_path' => 'web'
     ];
 
-    public static function setProps($props)
+    /**
+     * @param array $props
+     * @return void
+     */
+    public static function setProps(array $props):void
     {
         foreach ($props as $key => $value) {
             self::addProp($key, $value);
         }
     }
-    public static function addProp($key, $value)
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @return void
+     */
+    public static function addProp(string $key, $value):void
     {
         self::$props[$key] = $value;
     }
-    public static function getProps()
+
+    /**
+     * @return array
+     */
+    public static function getProps():array
     {
         return self::$props;
     }
-    public static function getProp($key)
+
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public static function getProp(string $key)
     {
         return self::$props[$key];
     }
 
-    private static function setSettingsDefault($settings){
+    /**
+     * @param array $settings
+     * @return void
+     */
+    private static function setSettings(array $settings):void
+    {
         foreach ($settings as $key => $value) {
-            self::$settings_default[$key] = $value;
+            self::$settings[$key] = $value;
         }
     }
-    private static function setRouters($routers)
+
+    /**
+     * @param array $routers
+     * @return void
+     */
+    private static function setRouters(array $routers):void
     {
         foreach ($routers as $router) {
 
-            if (! isset($router->path))
+            if (!isset($router['path']))
                 continue;
 
-            $path = "/{$router->path}/";
+            $path = "/{$router['path']}/";
             $len = strlen($path);
 
             if (substr($_SERVER['REQUEST_URI'],0,$len) !== $path)
                 continue;
 
             $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'],$len-1);
-            self::$controllers_path = $router->path;
 
-            if (isset($router->router)) {
-                self::$router = new $router->router;
-            }
-            if (isset($router->sign)) {
-                self::$sign = new $router->sign;
-            }
-            if (isset($router->config_local)) {
-                self::loadConfig($router->config_local);
+            if (isset($router['props'])){
+                self::setProps($router['props']);
+                unset($router['props']);
             }
 
-            return true;
+            self::setSettings($router);
+
+            return;
         }
-        return false;
+
     }
-    private static function checkSettings()
-    {
-        if (self::$controllers_path === "") {
-            self::$controllers_path = self::$settings_default["controllers_path"];
-        }
-        if (self::$router === "") {
-            self::$router = new self::$settings_default["router"];
-        }
-        if (self::$sign === "") {
-            self::$sign = new self::$settings_default["sign"];
-        }
-    }
-    public static function loadConfig($fileName)
+
+    /**
+     * @param string $fileName
+     * @return bool
+     */
+    public static function loadConfig(string $fileName): bool
     {
         if (! is_file($fileName))
             return false;
 
-        $ext = json_decode(file_get_contents($fileName));
-        if (isset($ext->default)) {
-            self::setSettingsDefault($ext->default);
+        $ext = json_decode(file_get_contents($fileName), true);
+        if (isset($ext['default'])) {
+            self::setSettings($ext['default']);
         }
-        if (isset($ext->routers)) {
-            self::setRouters($ext->routers);
+        if (isset($ext['routers'])) {
+            self::setRouters($ext['routers']);
         }
-        if (isset($ext->props)) {
-            self::setProps($ext->props);
+        if (isset($ext['props'])) {
+            self::setProps($ext['props']);
         }
-
-        self::checkSettings();
 
         return true;
     }
 
-    public static function add(CommandObj $obj)
+    /**
+     * @param CommandObj $obj
+     * @return void
+     */
+    public static function add(CommandObj $obj):void
     {
         self::$listCommands[] = $obj;
     }
-    private static function removeCurrent()
-    {
-        if (count(self::$listCommands)===0){
-            return false;
-        }
-        unset(self::$listCommands[0]);
-        array_values(self::$listCommands);
-        return true;
-    }
-    public static function runNext()
+
+
+    /**
+     * @return bool
+     */
+    public static function runNext():bool
     {
         if (count(self::$listCommands)===0){
             return false;
@@ -127,22 +167,42 @@ class SK
         return true;
     }
 
-    public static function run($fileName="")
+    /**
+     * @param string $fileName
+     * @return bool
+     * @throws ExceptionRouterModelNotChosen
+     * @throws ExceptionSignModelNotChosen
+     * @throws ExceptionSignOptionsNotCorrect
+     */
+    public static function run(string $fileName=''):bool
     {
-        if (self::$isRun) {
+        if (self::$isRun)
             return false;
-        };
 
         self::$isRun = true;
-        if ($fileName !== "") {
-            self::loadConfig($fileName);
-        }
 
-        self::$sign->run(['router' => self::$router]);
+        if ($fileName !== '')
+            self::loadConfig($fileName);
+
+        if (!isset($self::$settings['sign']))
+            throw new ExceptionSignModelNotChosen;
+
+        if (!isset($self::$settings['router']))
+            throw new ExceptionRouterModelNotChosen;
+
+        self::$controllers_path = self::$settings['controllers_path'];
+
+        $sign = new self::$settings['sign'];
+        self::$signInfo = $sign->run();
+
+        $router = new self::$settings['router'];
+        $router->controller_path = self::$settings['controllers_path'];
+        $router->run();
 
         while (self::runNext()) {}
 
         self::$isRun = false;
+
         return true;
     }
 }

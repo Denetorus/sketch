@@ -8,48 +8,43 @@ use sketch\SK;
 class RouterRest extends RouterBase
 {
 
-    public function run($signParams=[])
+    public function run():void
     {
         $uri = $this->getUri();
 
-        $AvailablePath = $this->PathAvailableWithoutSignIn($uri);
+        $uri = $this->uriTransform($uri);
 
-        if ( $AvailablePath===""){
-            return "";
-        }
-
-        $uri = $AvailablePath;
+        if ( $uri ==='' )
+            return;
 
         $controller_path = SK::$controllers_path;
-        foreach ($this->routes() as $uriPattern => $path) {
-            if (preg_match("~$uriPattern~", $uri)) {
+        foreach ($this->routesMasks() as $uriPattern => $path) {
 
-                $internalRoute = preg_replace("~$uriPattern~", $path, $uri);
-                $parameters = explode('/', $internalRoute);
-                $controllerName = ucfirst(array_shift($parameters)).'Controller';
+            if (!preg_match("~$uriPattern~", $uri))
+                continue;
 
-                $controllerFile = CONTROLLER ."/". $controller_path ."/". $controllerName . '.php';
-                if (! file_exists($controllerFile)) {
-                    break;
-                }
+            $internalRoute = preg_replace("~$uriPattern~", $path, $uri);
+            $parameters = explode('/', $internalRoute);
+            $controllerName = ucfirst(array_shift($parameters)).'Controller';
 
-                include_once($controllerFile);
+            $controllerFile = ROOT.'/controller/'. $controller_path ."/". $controllerName . '.php';
+            if (! file_exists($controllerFile))
+                break;
 
-                $actionName = "action".$_SERVER["REQUEST_METHOD"];
+            include_once($controllerFile);
 
-                $className = "controller\\".$controller_path.'\\'.$controllerName;
-                $controllerObject = new $className;
+            $actionName = "action".$_SERVER["REQUEST_METHOD"];
 
-                $result = call_user_func_array(array($controllerObject, $actionName), $parameters);
+            $className = "controller\\".$controller_path.'\\'.$controllerName;
+            $controllerObject = new $className;
 
-                if ($result === null) {
-                    break;
-                }
+            $result = call_user_func_array(array($controllerObject, $actionName), $parameters);
 
+            if ($result !== null)
                 echo json_encode($result);
 
-                break;
-            }
+            break;
+
         }
 
     }

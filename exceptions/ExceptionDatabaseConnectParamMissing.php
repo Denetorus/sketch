@@ -1,5 +1,9 @@
 <?php
 
+namespace sketch\exceptions;
+
+use Exception;
+
 class ExceptionDatabaseConnectParamMissing extends Exception
 {
 
