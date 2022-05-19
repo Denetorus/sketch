@@ -197,6 +197,7 @@ class SK
 
         $router = new self::$settings['router'];
         $router->controller_path = self::$settings['controllers_path'];
+        $router->signInfo = self::$signInfo;
         $router->run();
 
         while (self::runNext()) {}

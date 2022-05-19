@@ -11,6 +11,15 @@ class RouterBase
     public $controller_path='web';
 
     /**
+     * @var array
+     */
+    public $signInfo = [
+        'id'=>-1,
+        'status'=>-1,
+        'login'=>''
+    ];
+
+    /**
      * @return array[]
      */
     public function routes():array
@@ -76,11 +85,9 @@ class RouterBase
     public function uriTransform($uri):string
     {
 
-        $status = $_SESSION['status'] ?? -1;
-
         foreach ($this->routes() as $uriPattern => $params) {
 
-            if ($status < ($params['status'] ?? -1)) continue;
+            if ($this->signInfo['status'] < ($params['status'] ?? -1)) continue;
 
             $internal = $params['internal'] ?? false;
             if ($uri === $uriPattern
@@ -106,8 +113,8 @@ class RouterBase
      */
     public function run():void
     {
-        if (!isset($_SESSION['status']))
-            $_SESSION['status']=-1;
+        if (!isset($this->signInfo['status']))
+            $this->signInfo['status']=-1;
 
         $uri = $this->getUri();
 
