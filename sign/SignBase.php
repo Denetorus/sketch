@@ -49,11 +49,11 @@ abstract class SignBase
         if (empty($signOptions))
             throw new ExceptionSignOptionsNotCorrect("not filled");
 
-        if (isset($signOptions['class']))
+        if (!isset($signOptions['class']))
             throw new ExceptionSignOptionsNotCorrect('not content parameter class');
 
 
-        $SM = $signOptions['class'];
+        $SM = new $signOptions['class'];
 
         unset($signOptions['class']);
         foreach ($signOptions as $key => $value) {
