@@ -184,10 +184,10 @@ class SK
         if ($fileName !== '')
             self::loadConfig($fileName);
 
-        if (!isset($self::$settings['sign']))
+        if (!isset(self::$settings['sign']))
             throw new ExceptionSignModelNotChosen;
 
-        if (!isset($self::$settings['router']))
+        if (!isset(self::$settings['router']))
             throw new ExceptionRouterModelNotChosen;
 
         self::$controllers_path = self::$settings['controllers_path'];
