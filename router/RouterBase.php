@@ -113,7 +113,7 @@ class RouterBase
 
         $uri = $this->uriTransform($uri);
 
-        if ( $uri!=='signin' && $uri!=='' ){
+        if ( $uri==='' ){
 
             if (isset($_SESSION["is_console"]) && $_SESSION["is_console"])
                 echo "\e[31m", "resource is unavailable\n", "\e[0m";
