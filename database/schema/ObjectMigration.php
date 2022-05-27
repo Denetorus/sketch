@@ -84,7 +84,7 @@ class ObjectMigration
         $this->db->createTable(
             $table_name,
             $params,
-            null,
+            [],
             $this->schema_name
         );
 
