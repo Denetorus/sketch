@@ -49,7 +49,7 @@ class DBMigrate
         $result = $this->getMigrationListAll();
 
         $migrated_versions = $this->db->select(
-            "SELECT $this->schema_name.version FROM $this->schema_name.version;"
+            "SELECT version FROM $this->schema_name.version;"
         );
 
         foreach ($migrated_versions as $migrated_version) {
