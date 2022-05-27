@@ -107,7 +107,7 @@ class DBMigrate
                 'version' => 'character varying(180) NOT NULL PRIMARY KEY',
                 'apply_time' => 'timestamp DEFAULT CURRENT_TIMESTAMP',
             ],
-            null,
+            [],
             $this->schema_name
         );
     }
