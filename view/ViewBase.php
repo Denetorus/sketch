@@ -4,7 +4,12 @@ namespace sketch\view;
 
 class ViewBase
 {
-    public function renderPhpFile($_file_, $_params_ = [])
+    /**
+     * @param string $_file_
+     * @param array $_params_
+     * @return false|string
+     */
+    public function renderPhpFile(string $_file_, array $_params_ = [])
     {
         $_obInitialLevel_ = ob_get_level();
         ob_start();

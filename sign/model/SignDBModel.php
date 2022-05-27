@@ -46,6 +46,10 @@ class SignDBModel implements SignModelInterface
      * @var int
      */
     private $status = -1;
+    /**
+     * @var array
+     */
+    private $roles = [];
 
     /**
      * @return void
@@ -89,7 +93,8 @@ class SignDBModel implements SignModelInterface
         return [
             'id' => $this->id,
             'login' => $this->login,
-            'status' => $this->status
+            'status' => $this->status,
+            'roles' => $this->roles
         ];
     }
 
@@ -106,6 +111,7 @@ class SignDBModel implements SignModelInterface
         $this->password_hash = '';
         $this->login = '';
         $this->status = -1;
+        $this->roles = [];
         $this->DeleteSignCookies();
         $this->DeleteSignSession();
 
@@ -248,11 +254,14 @@ class SignDBModel implements SignModelInterface
             $this->id = $this->user->props['id'];
             $this->password_hash = $this->user->props['password_hash'];
             $this->status = $this->user->props['status'];
+            $this->roles = $this->user->props['roles'];
             return true;
         }
 
         $this->id = -1;
         $this->password_hash = '';
+        $this->status = -1;
+        $this->roles = [];
         return false;
     }
 
@@ -270,12 +279,14 @@ class SignDBModel implements SignModelInterface
             $this->login = $this->user->props['login'];
             $this->password_hash = $this->user->props['password_hash'];
             $this->status = $this->user->props['status'];
+            $this->roles = $this->user->props['roles'];
             return true;
         }
 
-        $this->id = -1;
-        $this->password = '';
+        $this->login = '';
+        $this->password_hash = '';
         $this->status = -1;
+        $this->roles = [];
         return false;
     }
 

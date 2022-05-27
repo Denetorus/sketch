@@ -6,9 +6,9 @@ class RouterBase
 {
 
     /**
-     * @var string
+     * @var array
      */
-    public $controller_path='web';
+    public $settings = [];
 
     /**
      * @var array
@@ -87,21 +87,27 @@ class RouterBase
 
         foreach ($this->routes() as $uriPattern => $params) {
 
-            if ($this->signInfo['status'] < ($params['status'] ?? -1)) continue;
+            if ($this->settings['use_status'] && $this->signInfo['status'] < ($params['status'] ?? -1))
+                continue;
+
 
             $internal = $params['internal'] ?? false;
-            if ($uri === $uriPattern
-                || ($internal && strpos($uri, $uriPattern."/")!==false))
-            {
-                if (isset($params['roles'])){
-                    if (!$this->inRoles($params['roles']))
-                    {
-                        continue;
-                    }
-                }
 
-                return $params['path'] ?? $uri;
+            if ($uri !== $uriPattern
+                && (!$internal || strpos($uri, $uriPattern."/")===false))
+                    continue;
+
+            if ($this->settings['use_roles']){
+
+                if (!isset($params['roles']))
+                    continue;
+
+                if (!$this->inRoles($params['roles']))
+                    continue;
+
             }
+
+            return $params['path'] ?? $uri;
 
         }
 
@@ -109,26 +115,40 @@ class RouterBase
     }
 
     /**
+     * @param string $uri
+     * @param string $transformed_uri
+     * @return string
+     */
+    public function checkUri(string $uri, string $transformed_uri):string
+    {
+
+        if ( $transformed_uri!=='' )
+            return $transformed_uri;
+
+        return '';
+
+    }
+
+    /**
+     * @param $result
+     * @return void
+     */
+    public function render($result):void
+    {
+        echo $result;
+    }
+
+    /**
      * @return void
      */
     public function run():void
     {
-        if (!isset($this->signInfo['status']))
-            $this->signInfo['status']=-1;
 
         $uri = $this->getUri();
+        $uri = $this->checkUri($uri, $this->uriTransform($uri));
 
-        $uri = $this->uriTransform($uri);
-
-        if ( $uri==='' ){
-
-            if (isset($_SESSION["is_console"]) && $_SESSION["is_console"])
-                echo "\e[31m", "resource is unavailable\n", "\e[0m";
-            else
-                header('Location: '.HOST.'/signin');
-
+        if ( $uri==='' )
             return;
-        }
 
         foreach ($this->routesMasks() as $uriPattern => $path) {
 
@@ -139,7 +159,7 @@ class RouterBase
             $parameters = explode('/', $internalRoute);
             $controllerName = ucfirst(array_shift($parameters)).'Controller';
 
-            $controllerFile = ROOT."/controller/$this->controller_path/$controllerName.php";
+            $controllerFile = ROOT."/controller/{$this->settings['controller_path']}/$controllerName.php";
             if (! file_exists($controllerFile))
                 break;
 
@@ -151,13 +171,13 @@ class RouterBase
 
             include_once($controllerFile);
 
-            $className = 'controller\\'.$this->controller_path.'\\'.$controllerName;
+            $className = 'controller\\'.$this->settings['controller_path'].'\\'.$controllerName;
             $controllerObject = new $className;
 
             $result = call_user_func_array(array($controllerObject, $actionName), $parameters);
 
             if ($result !== null)
-                echo $result;
+                $this->render($result);
 
             break;
 

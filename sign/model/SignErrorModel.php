@@ -7,9 +7,22 @@ use sketch\sign\SignModelInterface;
 class SignErrorModel implements SignModelInterface
 {
 
+    /**
+     * @var int
+     */
     private $id = -1;
+    /**
+     * @var string
+     */
     private $login = '';
+    /**
+     * @var int
+     */
     private $status = -1;
+    /**
+     * @var array
+     */
+    private $roles = [];
 
     /**
      * @return void
@@ -27,7 +40,8 @@ class SignErrorModel implements SignModelInterface
         return [
             'id' => $this->id,
             'login' => $this->login,
-            'status' => $this->status
+            'status' => $this->status,
+            'roles' => $this->roles
        ];
     }
 
@@ -36,6 +50,7 @@ class SignErrorModel implements SignModelInterface
         $this->id = -1;
         $this->login = '';
         $this->status = -1;
+        $this->roles = [];
     }
 
 }

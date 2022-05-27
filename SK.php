@@ -5,8 +5,6 @@ namespace sketch;
 use sketch\exceptions\ExceptionRouterModelNotChosen;
 use sketch\exceptions\ExceptionSignModelNotChosen;
 use sketch\exceptions\ExceptionSignOptionsNotCorrect;
-use sketch\router\RouterBase;
-use sketch\sign\SignBase;
 
 class SK
 {
@@ -38,7 +36,11 @@ class SK
      * @var string[]
      */
     public static $settings = [
-        'controllers_path' => 'web'
+        'controllers_path' => 'web',
+        'use_status' => false,
+        'use_roles' => false,
+        'sign_in_path' => 'signin',
+        'error_path' => 'error/error_404'
     ];
 
     /**
@@ -86,8 +88,14 @@ class SK
     private static function setSettings(array $settings):void
     {
         foreach ($settings as $key => $value) {
+            if ($key==='props')
+                continue;
             self::$settings[$key] = $value;
         }
+
+        if (isset($settings['props']))
+            self::setSettings($settings['props']);
+
     }
 
     /**
@@ -96,23 +104,23 @@ class SK
      */
     private static function setRouters(array $routers):void
     {
-        foreach ($routers as $router) {
 
-            if (!isset($router['path']))
+        if (isset($routers['default'])) {
+            self::setSettings($routers['default']);
+        }
+
+        foreach ($routers as $path => $router) {
+
+            if ($path === 'default')
                 continue;
 
-            $path = "/{$router['path']}/";
+            $path = "/$path/";
             $len = strlen($path);
 
             if (substr($_SERVER['REQUEST_URI'],0,$len) !== $path)
                 continue;
 
             $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'],$len-1);
-
-            if (isset($router['props'])){
-                self::setProps($router['props']);
-                unset($router['props']);
-            }
 
             self::setSettings($router);
 
@@ -131,9 +139,6 @@ class SK
             return false;
 
         $ext = json_decode(file_get_contents($fileName), true);
-        if (isset($ext['default'])) {
-            self::setSettings($ext['default']);
-        }
         if (isset($ext['routers'])) {
             self::setRouters($ext['routers']);
         }
@@ -196,7 +201,7 @@ class SK
         self::$signInfo = $sign->run();
 
         $router = new self::$settings['router'];
-        $router->controller_path = self::$settings['controllers_path'];
+        $router->settings = self::$settings;
         $router->signInfo = self::$signInfo;
         $router->run();
 

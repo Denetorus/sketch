@@ -42,6 +42,10 @@ class SignConfigModel implements SignModelInterface
      * @var int
      */
     private $status = -1;
+    /**
+     * @var array
+     */
+    private $roles = [];
 
     /**
      * @return void
@@ -85,7 +89,8 @@ class SignConfigModel implements SignModelInterface
         return [
             'id' => $this->id,
             'login' => $this->login,
-            'status' => $this->status
+            'status' => $this->status,
+            'roles' => $this->roles
         ];
     }
 
@@ -242,6 +247,7 @@ class SignConfigModel implements SignModelInterface
                 $this->id = $value['id'];
                 $this->password_hash = password_hash($value['password'], PASSWORD_DEFAULT);
                 $this->status = $value['status'];
+                $this->roles = $value['roles'];
                 return true;
             }
         }
@@ -260,6 +266,7 @@ class SignConfigModel implements SignModelInterface
                 $this->login = $value['login'];
                 $this->password_hash = password_hash($value['password'], PASSWORD_DEFAULT);
                 $this->status = $value['status'];
+                $this->roles = $value['roles'];
                 return true;
             }
         }
