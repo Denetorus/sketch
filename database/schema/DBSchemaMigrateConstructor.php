@@ -104,8 +104,8 @@ class DBSchemaMigrateConstructor
     {
         $result = [];
         $result["columns"] = $this->compareTableColumns(
-            $this->next_schema->tables[$table_name]["columns"],
-            $this->prev_schema->tables[$table_name]["columns"]
+            $this->next_schema->tables[$table_name]->columns,
+            $this->prev_schema->tables[$table_name]->columns
         );
         return $result;
     }
