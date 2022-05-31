@@ -2,8 +2,6 @@
 
 namespace sketch\router;
 
-use sketch\SK;
-
 class RouterRest extends RouterBase
 {
 
@@ -16,5 +14,9 @@ class RouterRest extends RouterBase
         echo json_encode($result);
     }
 
+    public function getAction(array &$parameters):string
+    {
+        return "action".$_SERVER["REQUEST_METHOD"];
+    }
 
 }

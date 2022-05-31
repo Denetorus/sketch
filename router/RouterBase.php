@@ -129,6 +129,16 @@ class RouterBase
 
     }
 
+    public function getAction(array &$parameters):string
+    {
+        $actionName = ucfirst(array_shift($parameters));
+        if ($actionName === '')
+            $actionName='index';
+
+        return 'action'.$actionName;
+
+    }
+
     /**
      * @param $result
      * @return void
@@ -163,13 +173,10 @@ class RouterBase
             if (! file_exists($controllerFile))
                 break;
 
-            $actionName = ucfirst(array_shift($parameters));
-            if ($actionName === '')
-                $actionName='index';
-
-            $actionName = 'action'.$actionName;
-
             include_once($controllerFile);
+
+            $actionName = $this->getAction($parameters);
+
 
             $className = 'controller\\'.$this->settings['controller_path'].'\\'.$controllerName;
             $controllerObject = new $className;
