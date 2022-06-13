@@ -125,7 +125,7 @@ abstract class DBSQL
             if ($answer===false)
                 return [];
 
-            return $result->fetch();
+            return $answer;
         }
 
 
