@@ -134,7 +134,10 @@ class DBSchemaMigrateConstructor
 
             $compare = $prev_columns[$column_name]->compareByOtherColumn($column);
             if ($compare!==[]) {
-                $result["toChange"][$column_name] = $compare;
+                $result["toChange"][$column_name] = [
+                    'new' => $column,
+                    'old'=> $prev_columns[$column_name]->toArray()
+                ];
             }
 
         }
