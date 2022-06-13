@@ -119,8 +119,15 @@ abstract class DBSQL
     public function selectOne(string $query, array $params=[]): array
     {
         $result = $this->queryResult($query, $params);
-        if ($result)
+        if ($result){
+
+            $answer = $result->fetch();
+            if ($answer===false)
+                return [];
+
             return $result->fetch();
+        }
+
 
         $this->onQueryError($query, $params);
         return [];
