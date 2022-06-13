@@ -185,8 +185,7 @@ class ObjectMigration
                         "SET NOT NULL",
                         $this->schema_name
                     );
-                    echo "$this->schema_name => $table_name 
-                            => column $column_name SET NOT NULL\n";
+                    echo "$this->schema_name => $table_name => column $column_name SET NOT NULL\n";
                 }else{
                     $this->db->changeColumn(
                         $table_name,
@@ -194,8 +193,7 @@ class ObjectMigration
                         "DROP NOT NULL",
                         $this->schema_name
                     );
-                    echo "$this->schema_name => $table_name 
-                            => column $column_name DROP NOT NULL\n";
+                    echo "$this->schema_name => $table_name => column $column_name DROP NOT NULL\n";
                 }
             }
 
@@ -209,8 +207,7 @@ class ObjectMigration
                         "DROP DEFAULT",
                         $this->schema_name
                     );
-                    echo "$this->schema_name => $table_name 
-                                => column $column_name DROP DEFAULT\n";
+                    echo "$this->schema_name => $table_name => column $column_name DROP DEFAULT\n";
                 }else{
                     $this->db->changeColumn(
                         $table_name,
@@ -218,14 +215,11 @@ class ObjectMigration
                         "SET DEFAULT {$column["new"]["default"]}",
                         $this->schema_name
                     );
-                    echo "$this->schema_name => $table_name}
-                            => column $column_name
-                            SET DEFAULT {$column["new"]["default"]}\n";
+                    echo "$this->schema_name => $table_name => column $column_name SET DEFAULT {$column["new"]["default"]}\n";
                 }
             }
 
-            echo "$this->schema_name => $table_name 
-                    => column $column_name was changed\n";
+            echo "$this->schema_name => $table_name => column $column_name was changed\n";
         }
 
     }
