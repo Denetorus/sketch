@@ -199,8 +199,8 @@ class ObjectMigration
                 }
             }
 
-            if(!isset($column["old"]["default"])) $column["old"]["default"]=null;
-            if(!isset($column["new"]["default"])) $column["new"]["default"]=null;
+            if(!isset($column["old"]["default"]) || $column["old"]["default"]=="") $column["old"]["default"]=null;
+            if(!isset($column["new"]["default"]) || $column["old"]["default"]=="") $column["new"]["default"]=null;
             if ($column["old"]["default"]!==$column["new"]["default"]){
                 if ($column["new"]["default"]===null){
                     $this->db->changeColumn(
