@@ -51,7 +51,7 @@ class ObjectMigration
      */
     private function deleteTables(array $tables_names): void
     {
-        foreach($tables_names as $table_name){
+        foreach($tables_names as $table_name=>$table){
             $this->db->dropTable($table_name, $this->schema_name);
             echo "$table_name was deleted\n";
         }
