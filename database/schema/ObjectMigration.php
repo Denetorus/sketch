@@ -252,7 +252,7 @@ class ObjectMigration
     private function prepareTypeContent(array $column):string
     {
         $content = $column["db_type"];
-        if (isset($column["length"])&&$column["length"]!==""){
+        if (isset($column["length"]) && $column["length"]!==""){
             $content .= "(".$column["length"].")";
         }
         return $content;
