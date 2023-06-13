@@ -32,8 +32,8 @@ abstract class DBRecordFull extends DBRecordBase
 
         $filters = $this->getFiltersByGottenFilters($gottenFilters);
         $filter_data = $this->getFiltersParameters($filters);
-        if ($filter_data->text) {
-            $query_text .= " WHERE " . $filter_data->text;
+        if ($filter_data['text']) {
+            $query_text .= " WHERE " . $filter_data['text'];
         }
 
         $sorts = $this->getSortsByGottenSorts($gottenSorts);
@@ -42,7 +42,7 @@ abstract class DBRecordFull extends DBRecordBase
             $query_text .= " ORDER BY " . $sort_text;
         }
 
-        $query_result = $this->db->select($query_text, $filter_data->params);
+        $query_result = $this->db->select($query_text, $filter_data['params']);
 
         return $this->prepareQueryResultByFields($query_result, $fields);
 
