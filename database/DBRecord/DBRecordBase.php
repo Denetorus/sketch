@@ -35,7 +35,7 @@ abstract class DBRecordBase implements DBRecord
      * @param int|string|null $ref
      * @param bool $notCreated
      */
-    public function __construct(int $ref=null, bool $notCreated=false)
+    public function __construct($ref=null, bool $notCreated=false)
     {
         $this->setDB();
 
