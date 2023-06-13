@@ -3,9 +3,11 @@
 namespace sketch\database\DBRecord;
 
 use sketch\database\DBRecord;
+use sketch\database\DBSQL;
 
-abstract class ObjectUIDBase implements DBRecord
+abstract class DBRecordBase implements DBRecord
 {
+
     /** @var DBSQL */
     protected $db = null;
     /**
@@ -17,31 +19,35 @@ abstract class ObjectUIDBase implements DBRecord
      */
     public $table_name = '';
     /**
-     * @var int
+     * @var string
      */
-    public $ref = "";
+    public $key_name = 'id';
+    /**
+     * @var int|string|null
+     */
+    public $ref = null;
     /**
      * @var array
      */
     public $props = [];
 
     /**
-     * @param string $uid
+     * @param int|string|null $ref
      * @param bool $notCreated
      */
-    public function __construct(string $uid="", bool $notCreated=false)
+    public function __construct(int $ref=null, bool $notCreated=false)
     {
         $this->setDB();
 
         if ($notCreated)
             return;
 
-        if ($uid === '') {
+        if ($ref === null) {
             $this->createNew();
             return;
         }
 
-        $this->ref = $uid;
+        $this->ref = $ref;
         $this->load();
     }
 
@@ -58,16 +64,16 @@ abstract class ObjectUIDBase implements DBRecord
     }
 
     /**
-     * @param bool $with_new_ID
+     * @param bool $with_new_ref
      * @return void
      */
-    public function save(bool $with_new_ID=true):array
+    public function save(bool $with_new_ref=true):array
     {
         $params = $this->props;
-        if ($with_new_ID){
-            unset($params["uid"]);
+        if ($with_new_ref){
+            unset($params[$this->key_name]);
         }
-        return $this->db->setRecordAndReturnPrimaryKey($this->table_name, $params, 'uid', $this->schema_name);
+        return $this->db->setRecordAndReturnPrimaryKey($this->table_name, $params, $this->key_name, $this->schema_name);
     }
 
     /**
@@ -77,7 +83,7 @@ abstract class ObjectUIDBase implements DBRecord
     {
         $this->db->updateRecord(
             $this->table_name,
-            ['uid'=>$this->ref],
+            [$this->key_name => $this->ref],
             $this->props,
             $this->schema_name
         );
@@ -90,7 +96,7 @@ abstract class ObjectUIDBase implements DBRecord
     {
         $this->props = $this->db->getRecord(
             $this->table_name,
-            ['uid' => $this->ref],
+            [$this->key_name => $this->ref],
             $this->schema_name
         );
     }
@@ -108,7 +114,7 @@ abstract class ObjectUIDBase implements DBRecord
         }
 
         $this->props = $this->db->getRecord($this->table_name, $conditions);
-        $this->ref = $this->props['uid'];
+        $this->ref = $this->props[$this->key_name];
 
     }
 
@@ -118,7 +124,7 @@ abstract class ObjectUIDBase implements DBRecord
     public function createNew():void
     {
         $this->props = $this->db->createRecord($this->table_name);
-        $this->ref = "";
+        $this->ref = null;
     }
 
     /**
@@ -126,7 +132,7 @@ abstract class ObjectUIDBase implements DBRecord
      */
     public function delete():void
     {
-        $this->db->deleteRecord($this->table_name, ['uid'=>$this->ref], $this->schema_name);
+        $this->db->deleteRecord($this->table_name, [$this->key_name=>$this->ref], $this->schema_name);
     }
 
     /**
