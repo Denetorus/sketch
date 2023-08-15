@@ -212,7 +212,7 @@ abstract class DBSQL
         if ($schema_name!=='public')
             $table_name = $schema_name.".".$table_name;
 
-        $queryText = "CREATE TABLE $table_name ($paramsText)";
+        $queryText = "CREATE TABLE IF NOT EXISTS $table_name ($paramsText)";
 
         $this->query($queryText);
 
