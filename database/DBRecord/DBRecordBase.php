@@ -63,7 +63,7 @@ abstract class DBRecordBase implements DBRecord
         return null;
     }
 
-    public function upset():void
+    public function upsert():void
     {
         $this->db->upsertRecord(
             $this->table_name,

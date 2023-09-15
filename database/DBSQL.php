@@ -473,18 +473,17 @@ abstract class DBSQL
         $symbol = "";
         $insertParams = "";
         $insertValues = "";
-        $updateParams = [];
+        $sendParams = [];
         $conflictParams = "";
         foreach ( $params as $key => $val) {
             $insertParams .= $symbol.$key;
             $insertValues .= $symbol." :".$key;
-            $updateParams["_S_".$key] = $val;
+            $sendParams[$key] = $val;
             $symbol = ",";
         }
 
         $symbol = "";
         foreach ($conditions as $key=>$value){
-            $updateParams["_W_".$key] = $value;
             $conflictParams .= $symbol.$key;
             $symbol = ",";
         }
@@ -493,15 +492,11 @@ abstract class DBSQL
             $table_name = $schema_name.".".$table_name;
 
         $query_text = "INSERT INTO $table_name ($insertParams) VALUES ($insertValues)
-            ON CONFLICT ({$conflictParams}) 
-                UPDATE $table_name SET 
-                    {$this->prepareQueryConditionsText($params, ",", "_S_")}
-                WHERE 
-                    {$this->prepareQueryConditionsText($conditions," && ","_W_")}
+            ON CONFLICT ($conflictParams) DOUPDATE SET 
+            {$this->prepareQueryConditionsText($params, ",", "")}
         ";
 
-
-        $this->query($query_text, $updateParams);
+        $this->query($query_text, $sendParams);
 
     }
 

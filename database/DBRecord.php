@@ -22,7 +22,7 @@ interface DBRecord
     /**
      * @return void
      */
-    public function upset():void;
+    public function upsert():void;
 
     /**
      * @param bool $with_new_ID
