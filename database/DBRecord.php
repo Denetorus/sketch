@@ -20,6 +20,11 @@ interface DBRecord
     public function __get(string $name);
 
     /**
+     * @return void
+     */
+    public function upset():void;
+
+    /**
      * @param bool $with_new_ID
      * @return void
      */
