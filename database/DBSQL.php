@@ -467,6 +467,44 @@ abstract class DBSQL
 
     }
 
+    public function upsertRecord(string $table_name, array $conditions, array $params, string $schema_name='public'):void
+    {
+
+        $symbol = "";
+        $insertParams = "";
+        $insertValues = "";
+        $updateParams = [];
+        $conflictParams = "";
+        foreach ( $params as $key => $val) {
+            $insertParams .= $symbol.$key;
+            $insertValues .= $symbol." :".$key;
+            $updateParams["_S_".$key] = $val;
+            $symbol = ",";
+        }
+
+        $symbol = "";
+        foreach ($conditions as $key=>$value){
+            $updateParams["_W_".$key] = $value;
+            $conflictParams .= $symbol.$key;
+            $symbol = ",";
+        }
+
+        if ($schema_name!=='public')
+            $table_name = $schema_name.".".$table_name;
+
+        $query_text = "INSERT INTO $table_name ($insertParams) VALUES ($insertValues)
+            ON CONFLICT ({$conflictParams}) 
+                UPDATE $table_name SET 
+                    {$this->prepareQueryConditionsText($params, ",", "_S_")}
+                WHERE 
+                    {$this->prepareQueryConditionsText($conditions," && ","_W_")}
+        ";
+
+
+        $this->query($query_text, $updateParams);
+
+    }
+
     /**
      * @param string $table_name
      * @return array
