@@ -492,7 +492,7 @@ abstract class DBSQL
             $table_name = $schema_name.".".$table_name;
 
         $query_text = "INSERT INTO $table_name ($insertParams) VALUES ($insertValues)
-            ON CONFLICT ($conflictParams) DOUPDATE SET 
+            ON CONFLICT ($conflictParams) DO UPDATE SET 
             {$this->prepareQueryConditionsText($params, ",", "")}
         ";
 
