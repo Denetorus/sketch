@@ -15,13 +15,21 @@ abstract class DBRecordFull extends DBRecordBase
         return '';
     }
 
-    public function load(): void
+    public function load($withExt=false): void
     {
-        $list = $this->getListWithExtension(
-            [],
-            [(object)['field' => $this->key_name, 'type' => '=', 'value' => $this->ref]]
-        );
-        $this->props = (count($list) ? $list[0] : []);
+        if ($withExt){
+
+            $list = $this->getListWithExtension(
+                [],
+                [(object)['field' => $this->key_name, 'type' => '=', 'value' => $this->ref]]
+            );
+            $this->props = (count($list) ? $list[0] : []);
+
+        }else{
+
+            parent::load();
+
+        }
     }
 
     public function getListWithExtension($gottenSorts = [], $gottenFilters = []): array
@@ -48,7 +56,6 @@ abstract class DBRecordFull extends DBRecordBase
 
     }
 
-
     public function getQueryTextWithExtension($fields): string
     {
 
@@ -62,18 +69,20 @@ abstract class DBRecordFull extends DBRecordBase
             $selected_params .= $sign . $tn . '.' . $cn . ' as ' . $field['name'];
             $sign = ',';
             if (isset($field['refTable'])) {
+                $refColumn = $field['refColumn'] ?? 'id';
                 $count_joined_tables++;
                 $join_table_name = 'JT' . $count_joined_tables;
                 $selected_params .= $sign . $join_table_name . '.description as _' . $field['name'] . '_presentation';
                 $join_tables .= " LEFT JOIN "
                     . $field['refTable'] . " as " . $join_table_name
-                    . ' on ' . $tn . '.' . $cn . '=' . $join_table_name . '.id';
+                    . ' on ' . $tn . '.' . $cn . '=' . $join_table_name . '.' . $refColumn;
             }
         }
 
         return "SELECT $selected_params FROM $this->table_name as list " . $join_tables . " " . $this->getJoinsText();
 
     }
+
 
 
     // sorts
