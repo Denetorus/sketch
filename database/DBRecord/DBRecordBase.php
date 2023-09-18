@@ -38,6 +38,8 @@ abstract class DBRecordBase implements DBRecord
     public function __construct($ref=null, bool $notCreated=false)
     {
         $this->setDB();
+        $this->ref = $ref;
+
 
         if ($notCreated)
             return;
@@ -47,7 +49,6 @@ abstract class DBRecordBase implements DBRecord
             return;
         }
 
-        $this->ref = $ref;
         $this->load();
     }
 
