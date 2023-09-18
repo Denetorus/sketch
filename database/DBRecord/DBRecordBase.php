@@ -119,13 +119,13 @@ abstract class DBRecordBase implements DBRecord
     public function loadByConditions(array $conditions):void
     {
 
-        if (empty($conditions===[])){
+        if (empty($conditions)){
             $this->createNew();
             return;
         }
 
         $this->props = $this->db->getRecord($this->table_name, $conditions);
-        $this->ref = $this->props[$this->key_name];
+        $this->ref = $this->props[$this->key_name] ?? null;
 
     }
 
