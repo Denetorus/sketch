@@ -39,12 +39,10 @@ abstract class DBRecordBase implements DBRecord
         $this->setDB();
         $this->key = $key;
 
-
-        if ($notCreated)
-            return;
-
         if ($key === null) {
-            $this->createNew();
+            if (!$notCreated) {
+                $this->createNew();
+            }
             return;
         }
 
