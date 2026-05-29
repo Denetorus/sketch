@@ -5,23 +5,33 @@ namespace sketch\database\DBRecord;
 abstract class DBRecordFull extends DBRecordBase
 {
 
+    /**
+     * @return array
+     */
     public function getFields(): array
     {
         return [];
     }
 
+    /**
+     * @return string
+     */
     public function getJoinsText(): string
     {
         return '';
     }
 
-    public function load($withExt=false): void
+    /**
+     * @param bool $withExt
+     * @return void
+     */
+    public function load(bool $withExt=false): void
     {
         if ($withExt){
 
             $list = $this->getListWithExtension(
                 [],
-                [(object)['field' => $this->key_name, 'type' => '=', 'value' => $this->ref]]
+                [(object)['field' => $this->key_name, 'type' => '=', 'value' => $this->key]]
             );
             $this->props = (count($list) ? $list[0] : []);
 
@@ -92,8 +102,15 @@ abstract class DBRecordFull extends DBRecordBase
         $result = [];
         $correct_sorts = $this->getCorrectSorts();
         foreach ($gottenSorts as $sort) {
-            if (strpos($correct_sorts, "," . $sort . ",") !== false) {
-                $result[] = "list." . $sort;
+            if(is_string($sort)) {
+                if(strpos($correct_sorts, "," . $sort . ",")){
+                    $result[] = "list." . $sort;
+                }
+            }else{
+                if(strpos($correct_sorts, "," . $sort['field'] . ",")){
+                    $direction = $sort['isDesc'] ? 'desc' : 'asc';
+                    $result[] = "list." . $sort['field'] . " " . $direction;
+                }
             }
         }
         return $result;
@@ -104,9 +121,9 @@ abstract class DBRecordFull extends DBRecordBase
         $result = "";
         $fields = $this->getFields();
         foreach ($fields as $field) {
-            $result .= "," . $field['name'] . " desc," . $field['name'] . " asc,";
+            $result .= "," . $field['name'];
         }
-        return $result;
+        return $result.',';
 
     }
 

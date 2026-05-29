@@ -25,26 +25,26 @@ abstract class DBRecordBase implements DBRecord
     /**
      * @var int|string|null
      */
-    public $ref = null;
+    public $key = null;
     /**
      * @var array
      */
     public $props = [];
 
     /**
-     * @param int|string|null $ref
+     * @param int|string|null $key
      * @param bool $notCreated
      */
-    public function __construct($ref=null, bool $notCreated=false)
+    public function __construct($key=null, bool $notCreated=false)
     {
         $this->setDB();
-        $this->ref = $ref;
+        $this->key = $key;
 
 
         if ($notCreated)
             return;
 
-        if ($ref === null) {
+        if ($key === null) {
             $this->createNew();
             return;
         }
@@ -68,20 +68,20 @@ abstract class DBRecordBase implements DBRecord
     {
         $this->db->upsertRecord(
             $this->table_name,
-            [$this->key_name => $this->ref],
+            [$this->key_name => $this->key],
             $this->props,
             $this->schema_name
         );
     }
 
     /**
-     * @param bool $with_new_ref
+     * @param bool $create_new_key
      * @return void
      */
-    public function save(bool $with_new_ref=true):array
+    public function save(bool $create_new_key=true):array
     {
         $params = $this->props;
-        if ($with_new_ref){
+        if ($create_new_key){
             unset($params[$this->key_name]);
         }
         return $this->db->setRecordAndReturnPrimaryKey($this->table_name, $params, $this->key_name, $this->schema_name);
@@ -94,7 +94,7 @@ abstract class DBRecordBase implements DBRecord
     {
         $this->db->updateRecord(
             $this->table_name,
-            [$this->key_name => $this->ref],
+            [$this->key_name => $this->key],
             $this->props,
             $this->schema_name
         );
@@ -107,7 +107,7 @@ abstract class DBRecordBase implements DBRecord
     {
         $this->props = $this->db->getRecord(
             $this->table_name,
-            [$this->key_name => $this->ref],
+            [$this->key_name => $this->key],
             $this->schema_name
         );
     }
@@ -125,7 +125,7 @@ abstract class DBRecordBase implements DBRecord
         }
 
         $this->props = $this->db->getRecord($this->table_name, $conditions);
-        $this->ref = $this->props[$this->key_name] ?? null;
+        $this->key = $this->props[$this->key_name] ?? null;
 
     }
 
@@ -135,7 +135,7 @@ abstract class DBRecordBase implements DBRecord
     public function createNew():void
     {
         $this->props = $this->db->createRecord($this->table_name);
-        $this->ref = null;
+        $this->key = null;
     }
 
     /**
@@ -143,7 +143,7 @@ abstract class DBRecordBase implements DBRecord
      */
     public function delete():void
     {
-        $this->db->deleteRecord($this->table_name, [$this->key_name=>$this->ref], $this->schema_name);
+        $this->db->deleteRecord($this->table_name, [$this->key_name=>$this->key], $this->schema_name);
     }
 
     /**

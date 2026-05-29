@@ -3,13 +3,15 @@
 namespace sketch\database;
 
 use Exception;
-use ExceptionDatabaseConnectParamMissing;
+use PDO;
+use PDOStatement;
+use sketch\exceptions\ExceptionDatabaseConnectParamMissing;
 
 abstract class DBSQL
 {
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     protected $db;
 
@@ -31,11 +33,11 @@ abstract class DBSQL
     {
         return [
             // return associative arrays
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             // return Exception on Error
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             //Use server placeholders
-            \PDO::ATTR_EMULATE_PREPARES => false
+            PDO::ATTR_EMULATE_PREPARES => false
         ];
     }
 
@@ -56,7 +58,7 @@ abstract class DBSQL
         if (!isset($attr['password']))
             throw new ExceptionDatabaseConnectParamMissing('password');
 
-        $this->db = new \PDO(
+        $this->db = new PDO(
             $attr['dsn'],
             $attr['user'],
             $attr['password'],
@@ -87,7 +89,7 @@ abstract class DBSQL
     /**
      * @param string $query
      * @param array $params
-     * @return false|\PDOStatement
+     * @return false|PDOStatement
      */
     public function queryResult(string $query, array $params=[])
     {

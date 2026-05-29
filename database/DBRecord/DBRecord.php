@@ -25,10 +25,10 @@ interface DBRecord
     public function upsert():void;
 
     /**
-     * @param bool $with_new_ID
+     * @param bool $create_new_key
      * @return void
      */
-    public function save(bool $with_new_ID=true):array;
+    public function save(bool $create_new_key=true):array;
 
     /**
      * @return void
