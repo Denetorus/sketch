@@ -129,7 +129,7 @@ class RouterBase
 
     }
 
-    public function getAction(array &$parameters):string
+    public function getAction(&$parameters):string
     {
         $actionName = ucfirst(array_shift($parameters));
         if ($actionName === '')
