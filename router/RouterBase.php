@@ -8,16 +8,12 @@ class RouterBase
     /**
      * @var array
      */
-    public $settings = [];
+    public array $settings = [];
 
     /**
      * @var array
      */
-    public $signInfo = [
-        'id'=>-1,
-        'status'=>-1,
-        'login'=>''
-    ];
+    public array $signInfo = [];
 
     /**
      * @return array[]
@@ -87,8 +83,11 @@ class RouterBase
 
         foreach ($this->routes() as $uriPattern => $params) {
 
-            if ($this->settings['use_status'] && $this->signInfo['status'] < ($params['status'] ?? -1))
+            if ($this->settings['use_status']
+                && $this->signInfo['user_status'] < ($params['status'] ?? -1))
+            {
                 continue;
+            }
 
 
             $internal = $params['internal'] ?? false;
