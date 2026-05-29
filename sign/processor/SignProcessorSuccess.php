@@ -10,7 +10,7 @@ class SignProcessorSuccess extends SignProcessorBase
         'login' => 'Guest',
         'password_hash' => "",
         'status' => 10,
-        'role' => [],
+        'roles' => [],
     ];
 
     /**
