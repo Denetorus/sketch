@@ -27,9 +27,9 @@ class DBSchemasDifference
     public $present;
 
     /**
-     * @param $name
+     * @param string $name
      */
-    public function __construct($name="public")
+    public function __construct(string $name="public")
     {
         $this->name = $name;
         $this->clearAll();

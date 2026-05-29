@@ -36,7 +36,7 @@ class MigrateBase implements CommandInterface
         );
     }
 
-    public function getMigrationListAll()
+    public function getMigrationListAll(): array
     {
         $MigrationsNameSpase =  get_class($this)."_files";
         $path = ROOT.'\\'.str_replace('\\','/',$MigrationsNameSpase)."\\*.php";
@@ -47,7 +47,7 @@ class MigrateBase implements CommandInterface
         return $List;
     }
 
-    public function getMigrationListNew()
+    public function getMigrationListNew(): array
     {
         $MigrationsNameSpase =  get_class($this)."_files";
         $path = ROOT.'/'.str_replace('\\','/',$MigrationsNameSpase)."/*.php";
@@ -56,7 +56,7 @@ class MigrateBase implements CommandInterface
             $className = basename($File, ".php");
             if (! $this->db->recordIsExist('migration', ["version" => $className])){
                 $List[] = $MigrationsNameSpase.'\\'.$className;
-            };
+            }
         }
         return $List;
     }
@@ -69,19 +69,19 @@ class MigrateBase implements CommandInterface
         $MigrateName = join('', array_slice(explode('\\', $className), -1));
         $this->db->query(
             "INSERT INTO migration (version, apply_time) 
-             VALUES ('{$MigrateName}', {$time})"
+             VALUES ('$MigrateName', $time)"
         );
-        echo "Migrate {$MigrateName} is execute \n";
+        echo "Migrate $MigrateName is execute \n";
     }
 
-    public function run($params=[])
+    public function run($params=[]): string
     {
         if ($this->checkMigrationTable()){
             $list = $this->getMigrationListNew();
         } else {
             $this->createMigrationTable();
             $list = $this->getMigrationListAll();
-        };
+        }
 
 
         if (Count($list)===0){
@@ -96,7 +96,7 @@ class MigrateBase implements CommandInterface
         }
 
         foreach ($list as $className) {
-            echo "Migrate {$className} is starting \n";
+            echo "Migrate $className is starting \n";
             $this->upOne($className);
         }
         echo "Migrate all is execute \n";

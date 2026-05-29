@@ -2,6 +2,8 @@
 
 namespace sketch\database;
 
+use sketch\database\DBSQL\DBSQL;
+
 class DBMigrate
 {
     private $db;

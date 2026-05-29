@@ -2,6 +2,7 @@
 
 namespace sketch\database;
 
+use sketch\database\DBSQL\DBSQL;
 use sketch\SK;
 
 abstract class DBBase
