@@ -129,11 +129,15 @@ class RouterBase
 
     }
 
-    public function getAction(&$parameters):string
+    public function getAction(array &$parameters):string
     {
-        $actionName = ucfirst(array_shift($parameters));
-        if ($actionName === '')
+        if(Count($parameters)===0){
             $actionName='index';
+        }else{
+            $actionName = ucfirst(array_shift($parameters));
+            if ($actionName === '')
+                $actionName='index';
+        }
 
         return 'action'.$actionName;
 
