@@ -1,6 +1,6 @@
 <?php
 
-namespace sketch\database;
+namespace sketch\database\DBSQL;
 
 use Exception;
 use PDO;

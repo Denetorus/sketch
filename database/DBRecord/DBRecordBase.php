@@ -2,8 +2,7 @@
 
 namespace sketch\database\DBRecord;
 
-use sketch\database\DBRecord;
-use sketch\database\DBSQL;
+use sketch\database\DBSQL\DBSQL;
 
 abstract class DBRecordBase implements DBRecord
 {

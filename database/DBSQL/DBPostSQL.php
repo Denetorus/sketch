@@ -2,7 +2,6 @@
 
 namespace sketch\database\DBSQL;
 
-use sketch\database\DBSQL;
 use sketch\exceptions\ExceptionDatabaseConnectParamMissing;
 
 class DBPostSQL extends DBSQL

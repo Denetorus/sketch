@@ -2,7 +2,7 @@
 
 namespace sketch\database\schema;
 
-use sketch\database\DBSQL;
+use sketch\database\DBSQL\DBSQL;
 
 class ObjectMigration
 {
