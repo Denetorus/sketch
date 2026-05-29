@@ -9,7 +9,7 @@ abstract class SignBase
     /**
      * @var array
      */
-    public $signedResult = [];
+    public array $signedResult = [];
 
     /**
      * @return array

@@ -12,6 +12,7 @@
     "require": {
       "ext-pdo": "*",
       "ext-pdo_pgsql": "*",
-      "ext-json": "*"
+      "ext-json": "*",
+      "ext-openssl": "*"
     }
 }

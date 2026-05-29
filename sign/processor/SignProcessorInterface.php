@@ -1,9 +1,10 @@
 <?php
 
-namespace sketch\sign;
+namespace sketch\sign\processor;
 
-interface SignModelInterface
+interface SignProcessorInterface
 {
+
     public function signIn();
     public function signedIn();
     public function signedInfo();
