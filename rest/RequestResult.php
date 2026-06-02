@@ -4,42 +4,51 @@ namespace sketch\rest;
 
 class RequestResult
 {
-    public $data = [];
-    public $error = [
-        'code' => 0,
-        'description' => "",
-        'serverMessage' => []
-    ];
-    public $hasErrors = false;
+    public array $data = [];
 
-    public function addError($code, $key="", $description=""){
+    public int $status = 200;
+
+    public array $errors = [];
+    public bool $hasErrors = false;
+
+    public function addError($status, $code, $description="", $message=""){
 
         $this->hasErrors = true;
+        $this->status = $status;
 
-        if ($this->error['code']===0){
-            $this->error['code'] = $code;
-            $this->error['description'] = $this->getErrorDescriptionByCode($code);
+        if ($description === ""){
+            $description = $this->getErrorDescriptionByCode($code);
         }
-        if ($key!==""){
-            $this->error['serverMessage'][] = [
-                'key' => $key,
-                'description' => $description
-            ];
-        }
+        $this->errors[] = [
+            "code" => $code,
+            "description" => $description,
+            "message" => $message
+        ];
+
     }
 
     public function insertData($data){
         $this->data = $data;
     }
 
+    public function addDataParam($key, $value)
+    {
+        $this->data[$key] = $value;
+    }
+
+    public function addDataRow($row){
+        $this->data[] = $row;
+    }
+
     public function toJson(): array
     {
         $result = [
+            'status' => $this->status,
+            'hasErrors' => $this->hasErrors,
             'data' => $this->data,
-            'hasErrors' => $this->hasErrors
         ];
         if($this->hasErrors){
-            $result['error'] = $this->error;
+            $result['errors'] = $this->errors;
         }
         return $result;
     }

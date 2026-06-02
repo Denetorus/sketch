@@ -16,57 +16,57 @@ abstract class ControllerRest
         header("Allow", $this->allowMethods());
     }
 
-    public function actionGet()
+    public function actionGet(): RequestResult
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
         $result = new RequestResult();
-        $result->addError(3, "GET", "Method GET Not Allowed");
+        $result->addError(405, 3, "GET", "Method GET Not Allowed");
         return $result;
     }
 
-    public function actionPost()
+    public function actionPost(): RequestResult
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
         $result = new RequestResult();
-        $result->addError(3, "POST", "Method POST Not Allowed");
+        $result->addError(405,3, "POST", "Method POST Not Allowed");
         return $result;
     }
 
-    public function actionPut()
+    public function actionPut(): RequestResult
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
         $result = new RequestResult();
-        $result->addError(3, "PUT", "Method PUT Not Allowed");
+        $result->addError(405,3, "PUT", "Method PUT Not Allowed");
         return $result;
     }
 
-    public function actionDelete()
+    public function actionDelete(): RequestResult
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
         $result = new RequestResult();
-        $result->addError(3, "DELETE", "Method DELETE Not Allowed");
+        $result->addError(405, 3, "DELETE", "Method DELETE Not Allowed");
         return $result;
     }
 
-    public function actionView()
+    public function actionView(): RequestResult
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
         $result = new RequestResult();
-        $result->addError(3, "VIEW", "Method VIEW Not Allowed");
+        $result->addError(405,3, "VIEW", "Method VIEW Not Allowed");
         return $result;
     }
 
-    public function actionCopy()
+    public function actionCopy(): RequestResult
     {
         $this->setHeaderAllowMethods();
         http_response_code(405);
         $result = new RequestResult();
-        $result->addError(3, "COPY", "Method COPY Not Allowed");
+        $result->addError(405,3, "COPY", "Method COPY Not Allowed");
         return $result;
     }
 
