@@ -183,7 +183,7 @@ abstract class DBRecordFull extends DBRecordBase
         foreach ($fields as $field) {
             $result .= "," . $field['name'];
         }
-        return $result;
+        return $result.',';
     }
 
     /**
