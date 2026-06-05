@@ -156,14 +156,14 @@ abstract class DBRecordFull extends DBRecordBase
 
         $result = [];
         foreach ($gottenFilters as $filter) {
-            if (strpos($correct_fields, "," . $filter->field . ",") === false)
+            if (strpos($correct_fields, "," . $filter['field'] . ",") === false)
                 continue;
-            if (strpos($correct_types, "," . $filter->type . ",") === false)
+            if (strpos($correct_types, "," . $filter['type'] . ",") === false)
                 continue;
             $result[] = [
-                'field' => $filter->field,
-                'type' => $filter->type,
-                'value' => $filter->value
+                'field' => $filter['field'],
+                'type' => $filter['type'],
+                'value' => $filter['value']
             ];
         }
 
