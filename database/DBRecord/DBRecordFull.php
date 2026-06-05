@@ -31,7 +31,7 @@ abstract class DBRecordFull extends DBRecordBase
 
             $list = $this->getListWithExtension(
                 [],
-                [(object)['field' => $this->key_name, 'type' => '=', 'value' => $this->key]]
+                [['field' => $this->key_name, 'type' => '=', 'value' => $this->key]]
             );
             $this->props = (count($list) ? $list[0] : []);
 
