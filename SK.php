@@ -43,6 +43,9 @@ class SK
         'error_path' => 'error/error_404'
     ];
 
+    public static $sign = null;
+    public static $router = null;
+
     /**
      * @param array $props
      * @return void
@@ -197,13 +200,13 @@ class SK
 
         self::$controllers_path = self::$settings['controllers_path'];
 
-        $sign = new self::$settings['sign'];
-        self::$signInfo = $sign->run();
+        self::$sign = new self::$settings['sign'];
+        self::$signInfo = self::$sign->run();
 
-        $router = new self::$settings['router'];
-        $router->settings = self::$settings;
-        $router->signInfo = self::$signInfo;
-        $router->run();
+        self::$router = new self::$settings['router'];
+        self::$router->settings = self::$settings;
+        self::$router->signInfo = self::$signInfo;
+        self::$router->run();
 
         while (self::runNext()) {}
 
