@@ -27,13 +27,15 @@ abstract class SignBase
         if (empty($signOptions))
             throw new ExceptionSignOptionsNotCorrect("not filled");
 
-        if (isset($signOptions['class']))
+        if (!isset($signOptions['class'])){
             throw new ExceptionSignOptionsNotCorrect('not content parameter class');
+        }
 
         $SM = new $signOptions['class'];
         $SM->clear();
+        $SM->signedIn();
 
-        $this->signedResult = $SM->signedIn() ? $SM->signedInfo() : null;
+        $this->signedResult = $SM->signedInfo();
         $_SESSION['signed_data'] = $this->signedResult;
 
     }
