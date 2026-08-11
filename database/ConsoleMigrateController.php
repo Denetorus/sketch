@@ -121,7 +121,7 @@ use sketch\database\schema\ObjectMigration;"
 
     }
 
-    public function actionGenerate_controllersRest(): void
+    public function actionGenerate_controllers(): void
     {
 
         echo "\e[1;32mStart create rest controllers\e[0m\n";
