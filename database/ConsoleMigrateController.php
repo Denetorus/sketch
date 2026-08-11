@@ -104,15 +104,15 @@ use sketch\database\schema\ObjectMigration;"
 
             file_put_contents($directory_default."/".$class_name.".php", $content);
 
-            $content = $this->getContent_object_origin(
-                $class_name,
-                $namespace_object_origin,
-                $namespace_object_default
-            );
-
-
-            file_put_contents($directory_origin."/".$class_name.".php", $content);
-
+            $object_origin = $directory_origin."\\".$class_name.".php";
+            if (!is_file($object_origin)){
+                $content = $this->getContent_object_origin(
+                    $class_name,
+                    $namespace_object_origin,
+                    $namespace_object_default
+                );
+                file_put_contents($object_origin, $content);
+            }
         }
 
 
