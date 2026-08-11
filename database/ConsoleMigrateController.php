@@ -197,7 +197,7 @@ namespace $this->namespace_rest;
 
 use $namespace_object;
 
-class $class_name extends \\$this->namespace_controller_base;
+class $class_name extends \\$this->namespace_controller_base
 {
 
     public function getNewObject(\$key=-1, \$notCreated=false): $table_name
