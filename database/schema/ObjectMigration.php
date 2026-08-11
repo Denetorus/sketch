@@ -14,7 +14,7 @@ class ObjectMigration
     /**
      * @var string
      */
-    private $schema_name="public";
+    private string $schema_name="public";
 
     /**
      * @param DBSQL $db

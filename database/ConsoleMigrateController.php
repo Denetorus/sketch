@@ -1,14 +1,18 @@
 <?php
 
-namespace controller\console;
+namespace sketch\database;
 
-use database\DBMain\DB;
-use sketch\database\DBMigrate;
+use sketch\database\DBSQL\DBSQL;
 use sketch\database\schema\DBSchema;
 use sketch\database\schema\DBSchemaMigrateConstructor;
 
 class ConsoleMigrateController
 {
+
+    /**
+     * @var DBSQL
+     */
+    protected $db;
 
     public string $namespace = "";
 
@@ -36,7 +40,7 @@ class ConsoleMigrateController
         echo "\e[1;33mStart migration\e[0m\n";
 
         $migrate = new DBMigrate(
-            DB::getInstance(),
+            $this->db,
             $this->getDirectory_DB()."/migration",
             "\\".$this->namespace."\migration"
         );
