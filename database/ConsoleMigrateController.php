@@ -9,39 +9,26 @@ use sketch\database\schema\DBSchemaMigrateConstructor;
 class ConsoleMigrateController
 {
 
-    public string $namespace = "";
+    public DBSQL $db;
+    public string $namespace_db = "";
+    public string $namespace_rest = "";
+    public string $namespace_object_base = "";
+    public string $namespace_controller_base = "";
 
-    public string $namespace_rest = "controller\object";
+    public string $directory_db = "";
+    public string $directory_rest = "";
 
-    public string $schema_file = "db_public_schema.json";
-    public string $new_schema_file = "db_public_schema_new.json";
-
-    public function getDB(): DBSQL|null
-    {
-        return null;
-    }
-    public function getDirectory_DB(): string
-    {
-        return dirname(__FILE__)."/".$this->namespace;
-    }
-    public function getParentObjectNamespace(): string
-    {
-        return $this->namespace."\DBObjectBase";
-    }
-
-    public function getParentControllerNamespace(): string
-    {
-        return "ControllerRestDBObject";
-    }
+    public string $schema_file = "";
+    public string $new_schema_file = "";
 
     public function actionDo_migrate(): void
     {
         echo "\e[1;33mStart migration\e[0m\n";
 
         $migrate = new DBMigrate(
-            $this->getDB(),
-            $this->getDirectory_DB()."/migration",
-            "\\".$this->namespace."\migration"
+            $this->db,
+            $this->directory_db."\migration",
+            "\\".$this->namespace_db."\migration"
         );
         $migrate->run();
 
@@ -53,24 +40,22 @@ class ConsoleMigrateController
 
         echo "\e[1;32mStart migrate generation\e[0m\n";
 
-        $schema_file = $this->getDirectory_DB()."/".$this->schema_file;
-        $new_schema_file = $this->getDirectory_DB()."/".$this->new_schema_file;
         $prev_schema = new DBSchema('public');
-        $prev_schema->loadByFile($schema_file);
+        $prev_schema->loadByFile($this->schema_file);
 
         $next_schema = new DBSchema('public');
-        $next_schema->loadByFile($new_schema_file);
+        $next_schema->loadByFile($this->new_schema_file);
 
         $constructor = new DBSchemaMigrateConstructor($prev_schema, $next_schema);
         $constructor->findDifference();
         $constructor->generateMigrateFile(
-            $this->getDirectory_DB()."/migration",
-            "namespace ".$this->namespace."\migration;
+            $this->directory_db."\migration",
+            "namespace ".$this->namespace_db."\migration;
 use sketch\database\schema\ObjectMigration;"
         );
 
-        unlink($schema_file);
-        copy($new_schema_file, $schema_file);
+        unlink($this->schema_file);
+        copy($this->new_schema_file, $this->schema_file);
 
         echo "\e[1;32mFinish migrate generation\e[0m\n";
 
@@ -81,18 +66,17 @@ use sketch\database\schema\ObjectMigration;"
 
         echo "\e[1;32mStart create objects\e[0m\n";
 
-        $scheme_file = $this->getDirectory_DB()."\\".$this->schema_file;
-        if (!is_file($scheme_file))
-            exit("Schema file is unavailable: $scheme_file");
+        if (!is_file($this->schema_file))
+            exit("Schema file is unavailable: $this->schema_file");
 
-        $schema = json_decode(file_get_contents($scheme_file), true);
+        $schema = json_decode(file_get_contents($this->schema_file), true);
         if (!is_array($schema) || !isset($schema['name']))
-            exit("Schema file don't contains the correct schema: $scheme_file");
+            exit("Schema file don't contains the correct schema: $this->schema_file");
 
-        $directory_origin = $this->getDirectory_DB().'\object';
-        $directory_default = $this->getDirectory_DB().'\object_default';
-        $namespace_object_origin = $this->namespace."\object";
-        $namespace_object_default = $this->namespace."\object_default";
+        $directory_origin = $this->directory_db.'\object';
+        $directory_default = $this->directory_db.'\object_default';
+        $namespace_object_origin = $this->namespace_db."\object";
+        $namespace_object_default = $this->namespace_db."\object_default";
         foreach ($schema['tables'] as $table_name=>$table) {
             $class_name = $table_name;
             $table_object = '['.PHP_EOL;
@@ -142,17 +126,14 @@ use sketch\database\schema\ObjectMigration;"
 
         echo "\e[1;32mStart create rest controllers\e[0m\n";
 
-        $scheme_file = $this->getDirectory_DB().$this->schema_file;
+        if (!is_file($this->schema_file))
+            exit("Schema file is unavailable: $this->schema_file");
 
-        if (!is_file($scheme_file))
-            exit("Schema file is unavailable: $scheme_file");
-
-        $schema = json_decode(file_get_contents($scheme_file), true);
+        $schema = json_decode(file_get_contents($this->schema_file), true);
         if (!is_array($schema) || !isset($schema['name']))
-            exit("Schema file don't contains the correct schema: $scheme_file");
+            exit("Schema file don't contains the correct schema: $this->schema_file");
 
-        $directory_rest = dirname(__FILE__).'/'.$this->namespace_rest;
-        $namespace_object_origin = $this->namespace."\object";
+        $namespace_object_origin = $this->namespace_db."\object";
 
         foreach ($schema['tables'] as $table_name=>$table) {
             if ($table_name==='users') continue;
@@ -163,7 +144,7 @@ use sketch\database\schema\ObjectMigration;"
                 $namespace_object_origin
             );
 
-            file_put_contents($directory_rest."/".$class_name.".php", $content);
+            file_put_contents($this->directory_rest."/".$class_name.".php", $content);
 
         }
 
@@ -174,13 +155,12 @@ use sketch\database\schema\ObjectMigration;"
 
     public function getContent_object_default($class_name, $table_name, $table_object, $namespace_object_default): string
     {
-        $namespace_parent_object = $this->getParentObjectNamespace();
         return  <<<EOT
 <?php
 
 namespace $namespace_object_default;
 
-class $class_name extends \\$namespace_parent_object
+class $class_name extends \\$this->namespace_object_base
 {
 
     public string \$table_name = "$table_name";
@@ -210,7 +190,6 @@ EOT;
     public function getContent_rest_controller($class_name, $table_name, $namespace_object_origin): string
     {
         $namespace_object = $namespace_object_origin."\\".$table_name;
-        $namespace_parent_controller = $this->getParentControllerNamespace();
         return <<<EOT
 <?php
 
@@ -218,7 +197,7 @@ namespace $this->namespace_rest;
 
 use $namespace_object;
 
-class $class_name extends \\$namespace_parent_controller
+class $class_name extends \\$this->namespace_controller_base;
 {
 
     public function getNewObject(\$key=-1, \$notCreated=false): $table_name
