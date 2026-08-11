@@ -12,15 +12,15 @@ abstract class DBRecordBase implements DBRecord
     /**
      * @var string
      */
-    public $schema_name = 'public';
+    public string $schema_name = 'public';
     /**
      * @var string
      */
-    public $table_name = '';
+    public string $table_name = '';
     /**
      * @var string
      */
-    public $key_name = 'id';
+    public string $key_name = 'id';
     /**
      * @var int|string|null
      */
@@ -28,7 +28,7 @@ abstract class DBRecordBase implements DBRecord
     /**
      * @var array
      */
-    public $props = [];
+    public array $props = [];
 
     /**
      * @param int|string|null $key
