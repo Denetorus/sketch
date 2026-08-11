@@ -9,11 +9,6 @@ use sketch\database\schema\DBSchemaMigrateConstructor;
 class ConsoleMigrateController
 {
 
-    /**
-     * @var DBSQL
-     */
-    protected $db;
-
     public string $namespace = "";
 
     public string $namespace_rest = "controller\object";
@@ -21,9 +16,13 @@ class ConsoleMigrateController
     public string $schema_file = "db_public_schema.json";
     public string $new_schema_file = "db_public_schema_new.json";
 
+    public function getDB(): DBSQL|null
+    {
+        return null;
+    }
     public function getDirectory_DB(): string
     {
-        return ROOT."/".$this->namespace;
+        return dirname(__FILE__)."/".$this->namespace;
     }
     public function getParentObjectNamespace(): string
     {
@@ -40,7 +39,7 @@ class ConsoleMigrateController
         echo "\e[1;33mStart migration\e[0m\n";
 
         $migrate = new DBMigrate(
-            $this->db,
+            $this->getDB(),
             $this->getDirectory_DB()."/migration",
             "\\".$this->namespace."\migration"
         );
@@ -152,7 +151,7 @@ use sketch\database\schema\ObjectMigration;"
         if (!is_array($schema) || !isset($schema['name']))
             exit("Schema file don't contains the correct schema: $scheme_file");
 
-        $directory_rest = ROOT.'/'.$this->namespace_rest;
+        $directory_rest = dirname(__FILE__).'/'.$this->namespace_rest;
         $namespace_object_origin = $this->namespace."\object";
 
         foreach ($schema['tables'] as $table_name=>$table) {
