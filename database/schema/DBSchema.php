@@ -50,7 +50,7 @@ class DBSchema
                         $tableColumns = $table["columns"];
                         foreach ($objectType["columns"] as $column_name=>$column) {
                             if (!isset($tableColumns[$column_name])){
-                                $column_name[$column_name] = $column;
+                                $tableColumns[$column_name] = $column;
                             }
                         }
                         continue;
