@@ -45,7 +45,7 @@ class DBSchemaTable
     {
         foreach ($columns as $column_name=>$column) {
             if ($column === null){
-                return;
+                continue;
             }
             $this->addColumn($column_name, $column);
         }

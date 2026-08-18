@@ -42,15 +42,14 @@ class DBSchema
         $this->name = $schema['name'];
         $this->clear();
 
-        foreach ($schema['tables'] as $table_name=>$table) {
+        foreach ($schema['tables'] as $table_name=>&$table) {
             if (isset($table["objectType"])){
                 $objectType = $schema['objectTypes'][$table["objectType"]];
                 foreach ($objectType as $objectTypeKey=>$objectTypeValue) {
                     if ($objectTypeKey === "columns"){
-                        $tableColumns = $table["columns"];
                         foreach ($objectType["columns"] as $column_name=>$column) {
-                            if (!isset($tableColumns[$column_name])){
-                                $tableColumns[$column_name] = $column;
+                            if (!isset($table["columns"][$column_name])){
+                                $table["columns"][$column_name] = $column;
                             }
                         }
                         continue;
