@@ -43,6 +43,23 @@ class DBSchema
         $this->clear();
 
         foreach ($schema['tables'] as $table_name=>$table) {
+            if (isset($table["objectType"])){
+                $objectType = $schema['objectTypes'][$table["objectType"]];
+                foreach ($objectType as $objectTypeKey=>$objectTypeValue) {
+                    if ($objectTypeKey === "columns"){
+                        $tableColumns = $table["columns"];
+                        foreach ($objectType["columns"] as $column_name=>$column) {
+                            if (!isset($tableColumns[$column_name])){
+                                $column_name[$column_name] = $column;
+                            }
+                        }
+                        continue;
+                    }
+                    if (!isset($table[$objectTypeKey])){
+                        $table[$objectTypeKey] = $objectTypeValue;
+                    }
+                }
+            }
             $this->tables[$table_name] = new DBSchemaTable($table_name, $table);
         }
     }

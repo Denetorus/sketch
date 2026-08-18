@@ -22,8 +22,10 @@ class DBSchemaTable
     {
         $this->name = $name;
 
-        if (isset($data['columns']))
+        if (isset($data['columns'])){
             $this->addColumns($data['columns']);
+        }
+
 
     }
 
@@ -42,6 +44,9 @@ class DBSchemaTable
     public function addColumns(array $columns):void
     {
         foreach ($columns as $column_name=>$column) {
+            if ($column === null){
+                return;
+            }
             $this->addColumn($column_name, $column);
         }
     }
