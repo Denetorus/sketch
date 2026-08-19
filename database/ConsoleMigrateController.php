@@ -17,9 +17,18 @@ class ConsoleMigrateController
 
     public string $directory_db = "";
     public string $directory_rest = "";
+    public string $directory_js_objects = "";
 
+    public object $schema;
     public string $schema_file = "";
     public string $new_schema_file = "";
+
+    public function loadSchema($schema_file): void
+    {
+        $this->schema = new DBSchema();
+        $this->schema->loadByFile($schema_file);
+    }
+
 
     public function actionDo_migrate(): void
     {
@@ -66,31 +75,26 @@ use sketch\database\schema\ObjectMigration;"
 
         echo "\e[1;32mStart create objects\e[0m\n";
 
-        if (!is_file($this->schema_file))
-            exit("Schema file is unavailable: $this->schema_file");
-
-        $schema = json_decode(file_get_contents($this->schema_file), true);
-        if (!is_array($schema) || !isset($schema['name']))
-            exit("Schema file don't contains the correct schema: $this->schema_file");
+        $this->loadSchema($this->schema_file);
 
         $directory_origin = $this->directory_db.'\object';
         $directory_default = $this->directory_db.'\object_default';
         $namespace_object_origin = $this->namespace_db."\object";
         $namespace_object_default = $this->namespace_db."\object_default";
-        foreach ($schema['tables'] as $table_name=>$table) {
+        foreach ( $this->schema->tables as $table_name=>$table) {
             $class_name = $table_name;
             $table_object = '['.PHP_EOL;
-            foreach ($table['columns'] as $column_name=>$column){
-                if (!isset($column['uid'])){
-                    exit('Undefined "uid" in table "'.$table_name.'"');
-                }
+            foreach ($table->columns as $column_name=>$column){
                 $table_object .='          [ ';
-                $table_object .='"name" => "'.$column['uid'].'",';
-                if (isset($column['type'])) {
-                    $table_object .='"type" => "'.$column['type'].'",';
+                $table_object .='"name" => "'.$column_name.'",';
+                if ($column->type !== "") {
+                    $table_object .='"type" => "'.$column->type.'",';
                 }
-                if (isset($column['refTable'])) {
-                    $table_object .='"refTable" => "'.$column['refTable'].'",';
+                if ($column->refTable !== "") {
+                    $table_object .='"refTable" => "'.$column->refTable.'",';
+                    $refTable = $this->schema->tables[$column->refTable];
+                    $table_object .='"refColumn" => "'.$refTable->refColumn.'",';
+                    $table_object .='"refPresentation" => "'.$refTable->refPresentation.'",';
                 }
                 $table_object .='],'.PHP_EOL;
             }
@@ -152,6 +156,144 @@ use sketch\database\schema\ObjectMigration;"
 
     }
 
+    public function actionGenerate_js_schema(): void
+    {
+
+        echo "\e[1;32mStart create js scheme\e[0m\n";
+
+        $this->loadSchema($this->schema_file);
+
+        $FieldDescriptions = [];
+        $Schemas = "";
+        foreach ($this->schema->tables as $table_name=>$table) {
+
+            $class_name = $table_name;
+            $title = $table->title ?? $class_name;
+            $titleList = $table->titleList ?? $class_name;
+
+            $Schema = "\t".$class_name.":{".PHP_EOL;
+            $Schema .= "\t"."\t".'name: "'.$class_name.'",'.PHP_EOL;
+            $Schema .= "\t"."\t".'db: window.db,'.PHP_EOL;
+            $Schema .= "\t"."\t".'title: "'.$title.'",'.PHP_EOL;
+            $Schema .= "\t"."\t".'titleList: "'.$titleList.'",'.PHP_EOL;
+            $Schema .= "\t"."\t".'fieldDescriptions: {'.PHP_EOL;
+
+            foreach ($table->columns as $columnName=>$column) {
+                $Line = $columnName.": new ";
+                switch ($column->type) {
+                    case "number":
+                        $Line = $Line."DBFieldDescriptionNumber";
+                        if (!isset($FieldDescriptions["number"])){
+                            $FieldDescriptions["number"] = "DBFieldDescriptionNumber";
+                        }
+                        break;
+                    case "id":
+                        $Line = $Line."DBFieldDescriptionId";
+                        if (!isset($FieldDescriptions["id"])){
+                            $FieldDescriptions["id"] = "DBFieldDescriptionId";
+                        }
+                        break;
+                    case "uid":
+                        $Line = $Line."DBFieldDescriptionUID";
+                        if (!isset($FieldDescriptions["uid"])){
+                            $FieldDescriptions["uid"] = "DBFieldDescriptionUID";
+                        }
+                        break;
+                    case "string":
+                    case "json":
+                    default:
+                        $Line = $Line."DBFieldDescriptionString";
+                        if (!isset($FieldDescriptions["string"])){
+                            $FieldDescriptions["string"] = "DBFieldDescriptionString";
+                        }
+                        break;
+                }
+                $Line .= "({";
+                if($column->title !== ""){
+                    $Line .= 'title: "'.$column->title.'", ';
+                }
+                if($column->primary_key){
+                    $Line .= "isKey: true, ";
+                }
+                $Line .= "}),";
+                $Schema .= "\t"."\t"."\t".$Line.PHP_EOL;
+
+            }
+
+            $Schema .= "\t"."\t".'}'.PHP_EOL;
+            $Schema .= "\t"."},".PHP_EOL;
+
+            $Schemas .= $Schema;
+
+        }
+        $content = "import {";
+        $separator = "";
+        foreach ($FieldDescriptions as $FieldDescription) {
+            $content .= $separator.$FieldDescription;
+            $separator = ", ";
+        }
+        $content .= "} from '/js/external/sk-cmp/sk-cmp-db-objects.js'".PHP_EOL.PHP_EOL;
+        $content .= "export const ObjectsSchemas = {".PHP_EOL;
+        $content .= $Schemas.PHP_EOL;
+        $content .= "}";
+
+
+        file_put_contents($this->directory_js_objects."/ObjectsSchemas.js", $content);
+
+        echo "\e[1;32mFinish js schema\e[0m\n";
+
+    }
+
+    public function actionGenerate_js_objects(): void
+    {
+
+        echo "\e[1;32mStart create js objects\e[0m\n";
+
+        $this->loadSchema($this->schema_file);
+
+        foreach ($this->schema->tables as $table_name=>$table) {
+
+            $class_name = $table_name;
+
+            $DirName = $this->directory_js_objects . "\\" . $class_name;
+            if (!is_dir($DirName)) {
+                mkdir($DirName);
+                echo "Generated directory ".$DirName." \n";
+            }
+
+            $FileName = $DirName . "\\" . $table_name . "_Object.js";
+            if (!is_file($FileName)) {
+                $content = $this->getContent_js_Object($class_name);
+                file_put_contents($FileName, $content);
+                echo "Generated js object ".$FileName." \n";
+            }
+
+            $FileName = $DirName . "\\" . $table_name . "_ListForm.js";
+            if (!is_file($FileName)) {
+                $content = $this->getContent_js_ListForm($class_name);
+                file_put_contents($FileName, $content);
+                echo "Generated js object ".$FileName." \n";
+            }
+
+            $FileName = $DirName . "\\" . $table_name . "_ItemForm.js";
+            if (!is_file($FileName)) {
+                $content = $this->getContent_js_ItemForm($class_name);
+                file_put_contents($FileName, $content);
+                echo "Generated js object's Item Form ".$FileName." \n";
+            }
+
+            $FileName = $DirName . "\\" . $table_name . "_TableObject.js";
+            if (!is_file($FileName)) {
+                $content = $this->getContent_js_TableObject($class_name);
+                file_put_contents($FileName, $content);
+                echo "Generated js Table Object ".$FileName." \n";
+            }
+
+        }
+        echo "\e[1;32mFinish js objects\e[0m\n";
+
+    }
+
 
     public function getContent_object_default($class_name, $table_name, $table_object, $namespace_object_default): string
     {
@@ -208,4 +350,80 @@ class $class_name extends \\$this->namespace_controller_base
 EOT;
 
     }
+    public function getContent_js_ItemForm($class_name): string
+    {
+        return  <<<EOT
+import {Schema_ItemForm} from "../Schema_ItemForm.js";
+import {{$class_name}_Object} from "./{$class_name}_Object.js";
+
+export class {$class_name}_ItemForm extends Schema_ItemForm{
+
+    constructor(windowOwner, key) {
+        const object = new {$class_name}_Object(key);
+        super("app_ItemForm", windowOwner, object);
+    }
+}
+customElements.define("$class_name-itemform",{$class_name}_ItemForm);
+EOT;
+    }
+    public function getContent_js_ListForm($class_name): string
+    {
+        return  <<<EOT
+import {Schema_ListForm} from "../Schema_ListForm.js";
+import {Schema_Table} from "../Schema_Table.js";
+import {{$class_name}_ItemForm} from "./{$class_name}_ItemForm.js";
+import {{$class_name}_TableObject} from "./{$class_name}_TableObject.js";
+
+export class {$class_name}_ListForm extends Schema_ListForm{
+
+    constructor(windowOwner) {
+        const table = new Schema_Table(new {$class_name}_TableObject());
+        super("{$class_name}_ListForm", windowOwner, table);
+    }
+
+    getItemForm(key){
+        return new {$class_name}_ItemForm(this, key)
+    }
+
+}
+customElements.define('$class_name-listform', {$class_name}_ListForm);
+EOT;
+
+    }
+    public function getContent_js_Object($class_name): string
+    {
+        return  <<<EOT
+import {Schema_Object} from "../Schema_Object.js";
+import {ObjectsSchemas} from "../ObjectsSchemas.js";
+
+export class {$class_name}_Object extends Schema_Object{
+    constructor(key) {
+        super(ObjectsSchemas.$class_name, key);
+    }
+}
+EOT;
+
+    }
+    public function getContent_js_TableObject($class_name): string
+    {
+        return  <<<EOT
+import {Schema_TableObject} from "../Schema_TableObject.js";
+import {ObjectsSchemas} from "../ObjectsSchemas.js";
+import {{$class_name}_Object} from "./{$class_name}_Object.js";
+
+export class {$class_name}_TableObject extends Schema_TableObject{
+    constructor() {
+        super(ObjectsSchemas.$class_name);
+        this.objectsSchema = ObjectsSchemas.$class_name;
+    }
+
+    getItemObject(key){
+        return new {$class_name}_Object(key);
+    }
+
+}
+EOT;
+
+    }
+
 }
