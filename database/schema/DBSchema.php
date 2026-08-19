@@ -3,6 +3,7 @@
 namespace sketch\database\schema;
 
 use sketch\database\DBSQL\DBSQL;
+use stdClass;
 
 class DBSchema
 {
@@ -10,11 +11,12 @@ class DBSchema
     /**
      * @var string
      */
-    public $name;
+    public string $name;
+
     /**
      * @var DBSchemaTable[]
      */
-    public $tables = [];
+    public array $tables;
 
     /**
      * @param string $name
@@ -22,44 +24,73 @@ class DBSchema
     public function __construct(string $name='public')
     {
         $this->name = $name;
+        $this->clear();
     }
 
+    /**
+     * @return void
+     */
+    public function clear():void
+    {
+        $this->tables = [];
+    }
+
+    public function getSchemaDataByFile($schema_file_name): object
+    {
+        $result = new stdClass();
+        $result->errors = "";
+        $result->data = [];
+
+        if (!is_file($schema_file_name)){
+            $result->errors = "Schema file not found: $schema_file_name";
+            return $result;
+        }
+
+        try {
+            $schema = json_decode(file_get_contents($schema_file_name), true);
+        }catch (\Exception $e){
+            $result->errors = "Schema file is not valid: $schema_file_name";
+            return $result;
+        }
+
+        $result->data = $schema;
+
+        if (!is_array($schema)){
+            $result->errors = "Schema file is not valid (data type should be array): $schema_file_name";
+        }elseif (!isset($schema['name'])){
+            $result->errors = "Schema file is not valid (data should contain 'name'): $schema_file_name";
+        }elseif (!isset($schema['tables'])){
+            $result->errors = "Schema file is not valid (data should contain 'tables'): $schema_file_name";
+        }
+
+        return $result;
+
+    }
 
     /**
      * @param string $schema_file_name
      */
     public function loadByFile(string $schema_file_name): void
     {
-        if (!is_file($schema_file_name))
-            exit("Schema file is unavailable: $schema_file_name");
+        $shemaData = $this->getSchemaDataByFile($schema_file_name);
+        if ($shemaData->errors !== ""){
+            exit($shemaData->errors);
+        }
 
-        $schema = json_decode(file_get_contents($schema_file_name), true);
-        if (!is_array($schema)
-                || !isset($schema['name'])
-        )
-            exit("Schema file don't contains the correct schema: $schema_file_name");
+        $schema = $shemaData->data;
 
         $this->name = $schema['name'];
         $this->clear();
 
-        foreach ($schema['tables'] as $table_name=>&$table) {
+        foreach ($schema['tables'] as $table_name=>$table) {
+
+            $this->tables[$table_name] = new DBSchemaTable($table_name);
             if (isset($table["objectType"])){
-                $objectType = $schema['objectTypes'][$table["objectType"]];
-                foreach ($objectType as $objectTypeKey=>$objectTypeValue) {
-                    if ($objectTypeKey === "columns"){
-                        foreach ($objectType["columns"] as $column_name=>$column) {
-                            if (!isset($table["columns"][$column_name])){
-                                $table["columns"][$column_name] = $column;
-                            }
-                        }
-                        continue;
-                    }
-                    if (!isset($table[$objectTypeKey])){
-                        $table[$objectTypeKey] = $objectTypeValue;
-                    }
-                }
+                $objectTypeTable = $schema['objectTypes'][$table["objectType"]];
+                $this->tables[$table_name]->fillData($objectTypeTable);
             }
-            $this->tables[$table_name] = new DBSchemaTable($table_name, $table);
+            $this->tables[$table_name]->fillData($table);
+
         }
     }
 
@@ -118,14 +149,6 @@ class DBSchema
                 ->setPrimaryKey($db_column["column_name"]);
         }
 
-    }
-
-    /**
-     * @return void
-     */
-    public function clear():void
-    {
-        $this->tables = [];
     }
 
 
