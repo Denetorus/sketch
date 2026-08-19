@@ -145,7 +145,8 @@ use sketch\database\schema\ObjectMigration;"
             $content = $this->getContent_rest_controller(
                 $class_name,
                 $table_name,
-                $namespace_object_origin
+                $namespace_object_origin,
+                $table->refPresentation
             );
 
             file_put_contents($this->directory_rest."/".$class_name.".php", $content);
@@ -329,7 +330,7 @@ class $class_name extends \\$object_default
 EOT;
 
     }
-    public function getContent_rest_controller($class_name, $table_name, $namespace_object_origin): string
+    public function getContent_rest_controller($class_name, $table_name, $namespace_object_origin, $refPresentation): string
     {
         $namespace_object = $namespace_object_origin."\\".$table_name;
         return <<<EOT
