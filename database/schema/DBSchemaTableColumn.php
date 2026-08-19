@@ -8,27 +8,39 @@ class DBSchemaTableColumn
     /**
      * @var string
      */
-    public $name;
+    public string $name;
     /**
      * @var string
      */
-    public $db_type;
+    public string $db_type;
     /**
      * @var string
      */
-    public $length;
+    public string $type;
+    /**
+     * @var string
+     */
+    public string $refTable;
+    /**
+     * @var string
+     */
+    public string $title;
+    /**
+     * @var string
+     */
+    public string $length;
     /**
      * @var bool
      */
-    public $not_null;
+    public bool $not_null;
     /**
      * @var string
      */
-    public $default;
+    public string $default;
     /**
      * @var bool
      */
-    public $primary_key;
+    public bool $primary_key;
 
     /**
      * @param string $name
@@ -51,6 +63,11 @@ class DBSchemaTableColumn
         $this->not_null = $data["not_null"] ?? false;
         $this->default = $data["default"] ?? "";
         $this->primary_key = $data["primary_key"] ?? false;
+
+        $this->type = $data["type"] ?? "";
+        $this->refTable = $data["refTable"] ?? "";
+        $this->title = $data["title"] ?? "";
+
     }
 
     /**
