@@ -201,7 +201,7 @@ abstract class DBRecordFull extends DBRecordBase
             if ($is_first) {
                 $is_first = false;
             } else {
-                $filter_text .= ",";
+                $filter_text .= "  and  ";
             }
 
             $params_number += 1;
