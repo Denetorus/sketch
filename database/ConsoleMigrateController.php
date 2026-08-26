@@ -130,26 +130,24 @@ use sketch\database\schema\ObjectMigration;"
 
         echo "\e[1;32mStart create rest controllers\e[0m\n";
 
-        if (!is_file($this->schema_file))
-            exit("Schema file is unavailable: $this->schema_file");
-
-        $schema = json_decode(file_get_contents($this->schema_file), true);
-        if (!is_array($schema) || !isset($schema['name']))
-            exit("Schema file don't contains the correct schema: $this->schema_file");
+        $this->loadSchema($this->schema_file);
 
         $namespace_object_origin = $this->namespace_db."\object";
 
-        foreach ($schema['tables'] as $table_name=>$table) {
-            if ($table_name==='users') continue;
-            $class_name = ucfirst($table_name.'Controller');
-            $content = $this->getContent_rest_controller(
-                $class_name,
-                $table_name,
-                $namespace_object_origin,
-                $table->refPresentation
-            );
+        foreach ($this->schema->tables as $table_name=>$table) {
 
-            file_put_contents($this->directory_rest."/".$class_name.".php", $content);
+            $class_name = ucfirst($table_name.'Controller');
+            $FileName = $this->directory_rest."/".$class_name.".php";
+            if (!is_file($FileName)) {
+                $content = $this->getContent_rest_controller(
+                    $class_name,
+                    $table_name,
+                    $namespace_object_origin,
+                    $table->refPresentation
+                );
+                file_put_contents($this->directory_rest."/".$class_name.".php", $content);
+                echo "Generated object controller ".$table_name." \n";
+            }
 
         }
 
@@ -200,6 +198,12 @@ use sketch\database\schema\ObjectMigration;"
                             $FieldDescriptions["uid"] = "DBFieldDescriptionUID";
                         }
                         break;
+                    case "object":
+                        $Line = $Line."DBFieldDescriptionObject";
+                        if (!isset($FieldDescriptions["Object"])){
+                            $FieldDescriptions["Object"] = "DBFieldDescriptionObject";
+                        }
+                        break;
                     case "string":
                     case "json":
                     default:
@@ -215,6 +219,9 @@ use sketch\database\schema\ObjectMigration;"
                 }
                 if($column->primary_key){
                     $Line .= "isKey: true, ";
+                }
+                if($column->refTable){
+                    $Line .= 'refTable: "'.$column->refTable.'", ';
                 }
                 $Line .= "}),";
                 $Schema .= "\t"."\t"."\t".$Line.PHP_EOL;
@@ -342,6 +349,8 @@ use $namespace_object;
 
 class $class_name extends \\$this->namespace_controller_base
 {
+
+    public string \$presentation_name = "$refPresentation";
 
     public function getNewObject(\$key=-1, \$notCreated=false): $table_name
     {
